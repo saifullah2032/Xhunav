@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Fingerprint, KeyRound, Loader2, ShieldCheck, UserScan, Camera } from 'lucide-react';
+import { Fingerprint, KeyRound, Loader2, ShieldCheck, UserCheck, Camera } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function LoginPage() {
@@ -120,7 +120,7 @@ export default function LoginPage() {
             </CardContent>
             <CardFooter>
               <Button onClick={handleIdVerification} className="w-full" disabled={isLoading || !hasCameraPermission}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserScan className="mr-2 h-4 w-4" />}
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCheck className="mr-2 h-4 w-4" />}
                 Verify ID
               </Button>
             </CardFooter>
