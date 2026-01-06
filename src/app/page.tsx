@@ -20,12 +20,16 @@ export default function Home() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <Link href="/voter/dashboard" className="w-full">
-            <Button className="w-full" size="lg">Voter Login</Button>
-          </Link>
-          <Link href="/admin/dashboard" className="w-full">
-            <Button className="w-full" variant="secondary" size="lg">Admin Login</Button>
-          </Link>
+          <Button asChild className="w-full" size="lg">
+            <Link href="/voter/dashboard" className="w-full">
+              Voter Login
+            </Link>
+          </Button>
+          <Button asChild className="w-full" variant="secondary" size="lg">
+            <Link href="/admin/dashboard" className="w-full">
+              Admin Login
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </main>
