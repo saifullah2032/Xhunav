@@ -14,7 +14,7 @@ const data = [
 
 export default function RealTimeVoteTally() {
   return (
-    <Card className="rounded-2xl shadow-sm h-full col-span-2">
+    <Card className="rounded-2xl shadow-sm h-full">
       <CardHeader>
         <CardTitle>Real-Time Vote Tally</CardTitle>
         <CardDescription>Votes received over time across all polling stations.</CardDescription>

@@ -1,61 +1,69 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, UserCheck, Archive, Vote, FileText } from 'lucide-react';
-import { elections, candidates, voters, electionResults } from '@/lib/data';
-import ResultsChart from '@/app/voter/dashboard/results-chart';
-import PartyResultsChart from '@/app/voter/dashboard/party-results-chart';
-import TransparencyWidget from '@/app/voter/dashboard/transparency-widget';
-import LeadingCandidateCard from '@/app/voter/dashboard/leading-candidate-card';
+import { BarChart, Users, AlertTriangle, ShieldCheck } from 'lucide-react';
+import RealTimeVoteTally from './real-time-vote-tally';
+import TransparencyIndexChart from './transparency-index-chart';
+import VotesPerCandidateChart from './votes-per-candidate-chart';
+import VoterTurnoutChart from './voter-turnout-chart';
+import { voters } from '@/lib/data';
 
-function RecentLogs() {
+function StatCard({ title, value, icon: Icon, subtext }: { title: string, value: string, icon: React.ElementType, subtext: string }) {
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <FileText />
-          Recent Logs
-        </CardTitle>
-        <CardDescription>Live system and voting events</CardDescription>
-      </CardHeader>
-      <CardContent className="text-xs text-muted-foreground space-y-2">
-        <p>[timestamp] VOTE_CAST_SUCCESS: Voter [VoterID] cast a vote.</p>
-        <p>[timestamp] AUTH_SUCCESS: Admin user logged in.</p>
-        <p>[timestamp] VOTE_HASH_GENERATED: Vote hash created for transaction.</p>
-      </CardContent>
+    <Card className="rounded-2xl shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            <Icon className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+            <div className="text-2xl font-bold">{value}</div>
+            <p className="text-xs text-muted-foreground">{subtext}</p>
+        </CardContent>
     </Card>
   );
 }
 
-
 export default function AdminDashboard() {
-  const activeElections = elections.filter(e => e.status === 'Active').length;
-
   return (
-    <div className="p-6 h-[calc(100vh-8rem)] bg-background">
-      <div className="grid grid-cols-12 grid-rows-3 gap-6 h-full font-body">
-        
-        {/* Zone A: Main Focus */}
-        <div className="col-span-12 lg:col-span-8 row-span-2">
-          <ResultsChart />
-        </div>
+    <div className="grid grid-cols-12 gap-6 font-body">
+      {/* Zone A: Real-Time Vote Tally */}
+      <div className="col-span-12 lg:col-span-8">
+        <RealTimeVoteTally />
+      </div>
 
-        {/* Zone B: Secondary */}
-        <div className="col-span-6 lg:col-span-4 row-span-1">
-          <TransparencyWidget />
+      {/* Zone B: Transparency Index */}
+      <div className="col-span-12 lg:col-span-4">
+        <TransparencyIndexChart />
+      </div>
+
+      {/* Bottom Row */}
+      {/* Col 1: Votes per Candidate */}
+      <div className="col-span-12 md:col-span-6 lg:col-span-4">
+        <VotesPerCandidateChart />
+      </div>
+
+      {/* Col 2: Voter Turnout by Region */}
+      <div className="col-span-12 md:col-span-6 lg:col-span-4">
+        <VoterTurnoutChart />
+      </div>
+
+      {/* Col 3: Stacked Small Cards */}
+      <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+        <div className="grid grid-cols-2 gap-6">
+           <StatCard title="Total Voters" value={voters.length.toLocaleString()} icon={Users} subtext="Registered" />
+           <StatCard title="Active Nodes" value="1,204" icon={ShieldCheck} subtext="Blockchain Network" />
         </div>
-        
-        {/* Zone C: Tertiary */}
-        <div className="col-span-6 lg:col-span-4 row-span-1">
-          <PartyResultsChart />
-        </div>
-        
-        {/* Zone D: Quaternary */}
-        <div className="col-span-6 lg:col-span-4 row-span-1">
-          <LeadingCandidateCard />
-        </div>
-        
-        <div className="col-span-6 lg:col-span-4 row-span-1">
-           <RecentLogs />
-        </div>
+        <Card className="bg-white rounded-2xl shadow-sm">
+            <CardHeader>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-accent" />
+                     Rejected Votes
+                </CardTitle>
+                <CardDescription>Security Alerts</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <p className="text-3xl font-bold text-accent">42</p>
+                <p className="text-xs text-muted-foreground">Potential duplicate or invalid signatures detected.</p>
+            </CardContent>
+        </Card>
       </div>
     </div>
   );
