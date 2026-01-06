@@ -1,85 +1,60 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, UserCheck, Archive, Vote, ArrowUp, ArrowDown } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Users, UserCheck, Archive, Vote, FileText } from 'lucide-react';
 import { elections, candidates, voters, electionResults } from '@/lib/data';
 import ResultsChart from '@/app/voter/dashboard/results-chart';
 import PartyResultsChart from '@/app/voter/dashboard/party-results-chart';
+import TransparencyWidget from '@/app/voter/dashboard/transparency-widget';
 import LeadingCandidateCard from '@/app/voter/dashboard/leading-candidate-card';
-import { Progress } from '@/components/ui/progress';
+
+function RecentLogs() {
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <FileText />
+          Recent Logs
+        </CardTitle>
+        <CardDescription>Live system and voting events</CardDescription>
+      </CardHeader>
+      <CardContent className="text-xs text-muted-foreground space-y-2">
+        <p>[timestamp] VOTE_CAST_SUCCESS: Voter [VoterID] cast a vote.</p>
+        <p>[timestamp] AUTH_SUCCESS: Admin user logged in.</p>
+        <p>[timestamp] VOTE_HASH_GENERATED: Vote hash created for transaction.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export default function AdminDashboard() {
   const activeElections = elections.filter(e => e.status === 'Active').length;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6.5rem)] gap-4">
-      <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="transition-all duration-300 hover:shadow-lg hover:scale-105">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="p-3 bg-blue-100 rounded-md">
-              <Users className="h-4 w-4 text-blue-500" />
-            </div>
-            <div className="flex items-center gap-1 text-xs text-green-600 font-semibold">
-                <ArrowUp className="h-4 w-4" /> 2.1%
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Total Voters</p>
-            <div className="text-2xl font-bold">{voters.length.toLocaleString()}</div>
-            <Progress value={75} className="h-1 mt-2 bg-blue-100" indicatorClassName="bg-blue-500" />
-          </CardContent>
-        </Card>
-        <Card className="transition-all duration-300 hover:shadow-lg hover:scale-105">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="p-3 bg-green-100 rounded-md">
-              <UserCheck className="h-4 w-4 text-green-600" />
-            </div>
-            <div className="flex items-center gap-1 text-xs text-green-600 font-semibold">
-                <ArrowUp className="h-4 w-4" /> 5.2%
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Total Candidates</p>
-            <div className="text-2xl font-bold">{candidates.length}</div>
-            <Progress value={60} className="h-1 mt-2 bg-green-100" indicatorClassName="bg-green-500" />
-          </CardContent>
-        </Card>
-        <Card className="transition-all duration-300 hover:shadow-lg hover:scale-105">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="p-3 bg-yellow-100 rounded-md">
-                <Archive className="h-4 w-4 text-yellow-600" />
-            </div>
-            <div className="flex items-center gap-1 text-xs text-red-600 font-semibold">
-                <ArrowDown className="h-4 w-4" /> 1.5%
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Active Elections</p>
-            <div className="text-2xl font-bold">{activeElections}</div>
-            <Progress value={40} className="h-1 mt-2 bg-yellow-100" indicatorClassName="bg-yellow-500" />
-          </CardContent>
-        </Card>
-         <Card className="transition-all duration-300 hover:shadow-lg hover:scale-105">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="p-3 bg-indigo-100 rounded-md">
-                <Vote className="h-4 w-4 text-indigo-500" />
-            </div>
-             <div className="flex items-center gap-1 text-xs text-green-600 font-semibold">
-                <ArrowUp className="h-4 w-4" /> 12.8%
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Total Votes Cast</p>
-            <div className="text-2xl font-bold">{electionResults.totalVotes.toLocaleString()}</div>
-            <Progress value={85} className="h-1 mt-2 bg-indigo-100" indicatorClassName="bg-indigo-500" />
-          </CardContent>
-        </Card>
-      </div>
-      <div className="grid grid-cols-5 gap-4 flex-1">
-        <div className="col-span-3">
+    <div className="p-6 h-[calc(100vh-5rem)] bg-background">
+      <div className="grid grid-cols-12 grid-rows-3 gap-6 h-full font-body">
+        
+        {/* Zone A: Main Focus */}
+        <div className="col-span-12 lg:col-span-8 row-span-2">
           <ResultsChart />
         </div>
-        <div className="col-span-2 flex flex-col gap-4">
+
+        {/* Zone B: Secondary */}
+        <div className="col-span-6 lg:col-span-4 row-span-1">
+          <TransparencyWidget />
+        </div>
+        
+        {/* Zone C: Tertiary */}
+        <div className="col-span-6 lg:col-span-4 row-span-1">
           <PartyResultsChart />
+        </div>
+        
+        {/* Zone D: Quaternary */}
+        <div className="col-span-6 lg:col-span-4 row-span-1">
+          <LeadingCandidateCard />
+        </div>
+        
+        <div className="col-span-6 lg:col-span-4 row-span-1">
+           <RecentLogs />
         </div>
       </div>
     </div>
