@@ -4,13 +4,17 @@ import LeadingCandidateCard from './leading-candidate-card';
 
 export default function VoterDashboard() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight font-headline">Election Dashboard</h1>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <LeadingCandidateCard />
-        <PartyResultsChart />
-      </div>
-      <ResultsChart />
+    <div className="flex h-[calc(100vh-10rem)] w-full gap-6">
+        <div className="w-[61.8%] flex flex-col">
+            <h1 className="text-3xl font-bold tracking-tight font-headline mb-6">Election Dashboard</h1>
+            <div className="flex-grow">
+                <ResultsChart />
+            </div>
+        </div>
+        <div className="w-[38.2%] flex flex-col gap-6 pt-[4.5rem]">
+            <LeadingCandidateCard />
+            <PartyResultsChart />
+        </div>
     </div>
   );
 }

@@ -16,13 +16,13 @@ const chartConfig = {
 
 export default function ResultsChart() {
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Live Election Results</CardTitle>
         <CardDescription>National Election 2024</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+      <CardContent className="flex-grow">
+        <ChartContainer config={chartConfig} className="w-full h-full min-h-[200px]">
           <BarChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
