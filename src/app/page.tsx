@@ -11,20 +11,6 @@ function Header() {
           <Vote className="h-6 w-6 text-primary" />
           <span className="text-lg font-semibold font-headline">Xhunav</span>
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-          <Link href="#about" className="hover:text-primary hover:underline" prefetch={false}>
-            About
-          </Link>
-          <Link href="/login" className="hover:text-primary hover:underline" prefetch={false}>
-            Voter
-          </Link>
-          <Link href="/admin/dashboard" className="hover:text-primary hover:underline" prefetch={false}>
-            Admin
-          </Link>
-        </nav>
-        <Button asChild size="sm">
-          <Link href="/login">Get Started</Link>
-        </Button>
       </div>
     </header>
   );
