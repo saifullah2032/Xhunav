@@ -1,5 +1,5 @@
 'use client';
-
+import { useMemo } from 'react';
 import { Pie, PieChart, Cell } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
@@ -8,22 +8,22 @@ import type { ChartConfig } from '@/components/ui/chart';
 
 const chartData = electionResults.partyVotes;
 
-const chartConfig = {
-  votes: {
-    label: 'Votes',
-  },
-  ...Object.fromEntries(
-    chartData.map((party, index) => [
-      party.party,
-      {
+export default function PartyResultsChart() {
+  const chartConfig = useMemo(() => {
+    const config: ChartConfig = {
+      votes: {
+        label: 'Votes',
+      },
+    };
+    chartData.forEach((party, index) => {
+      config[party.party] = {
         label: party.party,
         color: `hsl(var(--chart-${(index % 5) + 1}))`,
-      },
-    ])
-  ),
-} satisfies ChartConfig;
+      };
+    });
+    return config;
+  }, []);
 
-export default function PartyResultsChart() {
   return (
     <Card>
       <CardHeader>
