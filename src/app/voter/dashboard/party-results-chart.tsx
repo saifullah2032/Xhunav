@@ -41,7 +41,7 @@ export default function PartyResultsChart() {
               innerRadius={60}
               strokeWidth={5}
               labelLine={false}
-              label={({-percent, -name}: any) => `${name} (${(percent * 100).toFixed(0)}%)`}
+              label={({ percent, name }: any) => `${name} (${(percent * 100).toFixed(0)}%)`}
             >
               {chartData.map((entry) => (
                 <Cell key={`cell-${entry.party}`} fill={chartConfig[entry.party]?.color} />
