@@ -4,6 +4,8 @@ export type Candidate = {
   id: string;
   name: string;
   party: string;
+  email: string;
+  idImageUrl: string;
   imageUrl: string;
   votes: number;
 };
@@ -12,6 +14,8 @@ export type Voter = {
   id:string;
   name: string;
   voterId: string;
+  email: string;
+  idImageUrl: string;
 };
 
 export type Election = {
@@ -23,18 +27,18 @@ export type Election = {
 };
 
 export const candidates: Candidate[] = [
-  { id: '1', name: 'Aarav Sharma', party: 'Bharatiya Vikas Party', imageUrl: placeholderImages[0].imageUrl, votes: 1200 },
-  { id: '2', name: 'Saanvi Gupta', party: 'Jan Shakti Morcha', imageUrl: placeholderImages[1].imageUrl, votes: 950 },
-  { id: '3', name: 'Vivaan Singh', party: 'Loktantra Rakshak Dal', imageUrl: placeholderImages[2].imageUrl, votes: 1500 },
-  { id: '4', name: 'Myra Reddy', party: 'Rashtriya Pragati Alliance', imageUrl: placeholderImages[3].imageUrl, votes: 780 },
+  { id: '1', name: 'Aarav Sharma', party: 'Bharatiya Vikas Party', email: 'aarav.sharma@example.com', idImageUrl: 'https://picsum.photos/seed/id-1/400/400', imageUrl: placeholderImages[0].imageUrl, votes: 1200 },
+  { id: '2', name: 'Saanvi Gupta', party: 'Jan Shakti Morcha', email: 'saanvi.gupta@example.com', idImageUrl: 'https://picsum.photos/seed/id-2/400/400', imageUrl: placeholderImages[1].imageUrl, votes: 950 },
+  { id: '3', name: 'Vivaan Singh', party: 'Loktantra Rakshak Dal', email: 'vivaan.singh@example.com', idImageUrl: 'https://picsum.photos/seed/id-3/400/400', imageUrl: placeholderImages[2].imageUrl, votes: 1500 },
+  { id: '4', name: 'Myra Reddy', party: 'Rashtriya Pragati Alliance', email: 'myra.reddy@example.com', idImageUrl: 'https://picsum.photos/seed/id-4/400/400', imageUrl: placeholderImages[3].imageUrl, votes: 780 },
 ];
 
 export const voters: Voter[] = [
-  { id: '1', name: 'Aditi Kumar', voterId: 'VOTER-1001' },
-  { id: '2', name: 'Rohan Joshi', voterId: 'VOTER-1002' },
-  { id: '3', name: 'Priya Mehta', voterId: 'VOTER-1003' },
-  { id: '4', name: 'Kabir Desai', voterId: 'VOTER-1004' },
-  { id: '5', name: 'Ishaan Patel', voterId: 'VOTER-1005' },
+  { id: '1', name: 'Aditi Kumar', voterId: 'VOTER-1001', email: 'aditi.kumar@example.com', idImageUrl: 'https://picsum.photos/seed/vid-1/400/400' },
+  { id: '2', name: 'Rohan Joshi', voterId: 'VOTER-1002', email: 'rohan.joshi@example.com', idImageUrl: 'https://picsum.photos/seed/vid-2/400/400' },
+  { id: '3', name: 'Priya Mehta', voterId: 'VOTER-1003', email: 'priya.mehta@example.com', idImageUrl: 'https://picsum.photos/seed/vid-3/400/400' },
+  { id: '4', name: 'Kabir Desai', voterId: 'VOTER-1004', email: 'kabir.desai@example.com', idImageUrl: 'https://picsum.photos/seed/vid-4/400/400' },
+  { id: '5', name: 'Ishaan Patel', voterId: 'VOTER-1005', email: 'ishaan.patel@example.com', idImageUrl: 'https://picsum.photos/seed/vid-5/400/400' },
 ];
 
 export const elections: Election[] = [

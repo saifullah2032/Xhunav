@@ -86,7 +86,7 @@ export default function VoterLayout({ children }: { children: React.ReactNode })
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="p-4 sm:p-6 lg:p-8 overflow-hidden">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
