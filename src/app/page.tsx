@@ -15,7 +15,7 @@ function Header() {
           <Link href="#about" className="hover:text-primary hover:underline" prefetch={false}>
             About
           </Link>
-          <Link href="/voter/dashboard" className="hover:text-primary hover:underline" prefetch={false}>
+          <Link href="/login" className="hover:text-primary hover:underline" prefetch={false}>
             Voter
           </Link>
           <Link href="/admin/dashboard" className="hover:text-primary hover:underline" prefetch={false}>
@@ -23,7 +23,7 @@ function Header() {
           </Link>
         </nav>
         <Button asChild size="sm">
-          <Link href="/voter/dashboard">Get Started</Link>
+          <Link href="/login">Get Started</Link>
         </Button>
       </div>
     </header>
@@ -62,7 +62,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <Button asChild className="w-full" size="lg">
-                <Link href="/voter/dashboard" className="w-full">
+                <Link href="/login" className="w-full">
                   Voter Login
                 </Link>
               </Button>

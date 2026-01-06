@@ -1,14 +1,21 @@
 import { placeholderImages } from './placeholder-images';
 
-export type Candidate = {
+export interface Candidate {
   id: string;
   name: string;
   party: string;
-  email: string;
-  idImageUrl: string;
+  manifesto: string;
   imageUrl: string;
-  votes: number;
-};
+  votes: number; // For simulation purposes
+}
+
+export interface VoteTransaction {
+  voterId: string; // Anonymized or Tokenized
+  electionId: string;
+  voteHash: string; // SHA-256
+  signature: string; // CRYSTALS-Dilithium signature
+  timestamp: number;
+}
 
 export type Voter = {
   id:string;
@@ -27,10 +34,10 @@ export type Election = {
 };
 
 export const candidates: Candidate[] = [
-  { id: '1', name: 'Aarav Sharma', party: 'Bharatiya Vikas Party', email: 'aarav.sharma@example.com', idImageUrl: 'https://picsum.photos/seed/id-1/400/400', imageUrl: placeholderImages[0].imageUrl, votes: 1200 },
-  { id: '2', name: 'Saanvi Gupta', party: 'Jan Shakti Morcha', email: 'saanvi.gupta@example.com', idImageUrl: 'https://picsum.photos/seed/id-2/400/400', imageUrl: placeholderImages[1].imageUrl, votes: 950 },
-  { id: '3', name: 'Vivaan Singh', party: 'Loktantra Rakshak Dal', email: 'vivaan.singh@example.com', idImageUrl: 'https://picsum.photos/seed/id-3/400/400', imageUrl: placeholderImages[2].imageUrl, votes: 1500 },
-  { id: '4', name: 'Myra Reddy', party: 'Rashtriya Pragati Alliance', email: 'myra.reddy@example.com', idImageUrl: 'https://picsum.photos/seed/id-4/400/400', imageUrl: placeholderImages[3].imageUrl, votes: 780 },
+  { id: '1', name: 'Aarav Sharma', party: 'Bharatiya Vikas Party', manifesto: 'Focus on economic growth and infrastructure.', imageUrl: placeholderImages[0].imageUrl, votes: 1200 },
+  { id: '2', name: 'Saanvi Gupta', party: 'Jan Shakti Morcha', manifesto: 'Promoting social justice and equality.', imageUrl: placeholderImages[1].imageUrl, votes: 950 },
+  { id: '3', name: 'Vivaan Singh', party: 'Loktantra Rakshak Dal', manifesto: 'Strengthening democratic institutions.', imageUrl: placeholderImages[2].imageUrl, votes: 1500 },
+  { id: '4', name: 'Myra Reddy', party: 'Rashtriya Pragati Alliance', manifesto: 'Driving technological innovation.', imageUrl: placeholderImages[3].imageUrl, votes: 780 },
 ];
 
 export const voters: Voter[] = [
@@ -56,4 +63,10 @@ export const electionResults = {
   totalVotes: candidates.reduce((acc, c) => acc + c.votes, 0),
   candidateVotes: candidates.map(c => ({ name: c.name, party: c.party, votes: c.votes })),
   partyVotes: Object.entries(partyVotes).map(([party, votes]) => ({ party, votes })),
+};
+
+export const transparencyData = {
+    voteConfirmation: 0.95, // Vc: 95% of votes are confirmed on-chain
+    ledgerAccessibility: 0.98, // La: Ledger is 98% accessible to public auditors
+    publicTransparency: 0.88, // Pt: 88% of procedural data is publicly available
 };
