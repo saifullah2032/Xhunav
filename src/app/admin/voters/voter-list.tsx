@@ -1,15 +1,46 @@
 'use client';
-
 import { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import type { Voter } from '@/lib/data';
 import { sendVoterAddedEmail } from '@/lib/mail';
+
+function VoterCard({ voter, onEdit, onDelete }: { voter: Voter, onEdit: () => void, onDelete: () => void }) {
+  return (
+    <Card className="group relative flex flex-col overflow-hidden text-center transition-all duration-300 hover:shadow-xl">
+      <div className="relative h-48 w-full">
+        <div className="absolute inset-0 bg-primary [clip-path:polygon(0_0,_100%_0,_100%_80%,_0_100%)]">
+          <Image 
+            src={voter.idImageUrl} 
+            alt={voter.name} 
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col items-center p-6">
+        <CardContent className="p-0 flex-grow">
+          <h3 className="text-lg font-bold">{voter.name}</h3>
+          <p className="text-sm text-muted-foreground">{voter.voterId}</p>
+          <p className="text-xs text-muted-foreground">{voter.email}</p>
+        </CardContent>
+        <div className="mt-4 flex w-full items-center gap-2">
+            <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
+              <Edit className="mr-2 h-3 w-3" /> Edit
+            </Button>
+            <Button variant="ghost" size="icon" className="text-destructive" onClick={onDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export default function VoterList({ initialVoters }: { initialVoters: Voter[] }) {
   const [voters, setVoters] = useState(initialVoters);
@@ -58,35 +89,16 @@ export default function VoterList({ initialVoters }: { initialVoters: Voter[] })
         </Button>
       </div>
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Voter ID</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {voters.map((voter) => (
-              <TableRow key={voter.id}>
-                <TableCell className="font-medium">{voter.name}</TableCell>
-                <TableCell>{voter.voterId}</TableCell>
-                <TableCell>{voter.email}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(voter)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(voter.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {voters.map((voter) => (
+          <VoterCard 
+            key={voter.id} 
+            voter={voter} 
+            onEdit={() => handleOpenDialog(voter)}
+            onDelete={() => handleDelete(voter.id)}
+          />
+        ))}
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -107,8 +119,8 @@ export default function VoterList({ initialVoters }: { initialVoters: Voter[] })
                 <Input id="email" type="email" value={currentVoter.email || ''} onChange={(e) => setCurrentVoter({ ...currentVoter, email: e.target.value })} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="id-image" className="text-right">ID Image</Label>
-                <Input id="id-image" type="file" className="col-span-3" />
+                <Label htmlFor="idImageUrl" className="text-right">ID Image URL</Label>
+                <Input id="idImageUrl" value={currentVoter.idImageUrl || ''} onChange={(e) => setCurrentVoter({ ...currentVoter, idImageUrl: e.target.value })} className="col-span-3" />
             </div>
           </div>
           <DialogFooter>
