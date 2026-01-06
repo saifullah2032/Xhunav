@@ -1,21 +1,48 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { PlusCircle, Edit, Trash2, Star } from 'lucide-react';
 import type { Candidate } from '@/lib/data';
 import { sendCandidateAddedEmail } from '@/lib/mail';
+
+function CandidateCard({ candidate, onEdit, onDelete }: { candidate: Candidate, onEdit: () => void, onDelete: () => void }) {
+  return (
+    <Card className="flex flex-col items-center p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <div className="relative mb-4">
+        <Image src={candidate.imageUrl} alt={candidate.name} width={100} height={100} className="rounded-full object-cover" />
+        <div className="absolute top-0 right-0 flex items-center gap-1 rounded-full bg-accent/90 px-2 py-1 text-xs font-bold text-accent-foreground">
+          <Star className="h-3 w-3" />
+          <span>{ (candidate.votes / 1000).toFixed(1) }k</span>
+        </div>
+      </div>
+      <CardContent className="p-0 flex-grow">
+        <h3 className="text-lg font-bold">{candidate.name}</h3>
+        <p className="text-sm text-muted-foreground">{candidate.party}</p>
+      </CardContent>
+      <div className="mt-4 flex w-full items-center gap-2">
+        <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
+          <Edit className="mr-2 h-3 w-3" /> Edit
+        </Button>
+        <Button variant="ghost" size="icon" className="text-destructive" onClick={onDelete}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 
 export default function CandidateList({ initialCandidates }: { initialCandidates: Candidate[] }) {
   const [candidates, setCandidates] = useState(initialCandidates);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentCandidate, setCurrentCandidate] = useState<Partial<Candidate>>({});
+  const [candidateToDelete, setCandidateToDelete] = useState<Candidate | null>(null);
 
   const handleSave = () => {
     if (!currentCandidate.name || !currentCandidate.party || !currentCandidate.email) {
@@ -31,9 +58,9 @@ export default function CandidateList({ initialCandidates }: { initialCandidates
         name: currentCandidate.name,
         party: currentCandidate.party,
         email: currentCandidate.email,
-        manifesto: 'New candidate manifesto.',
+        manifesto: currentCandidate.manifesto || 'New candidate manifesto.',
         idImageUrl: currentCandidate.idImageUrl || 'https://picsum.photos/seed/id-' + Date.now() + '/400/400',
-        imageUrl: 'https://picsum.photos/seed/' + Date.now() + '/400/400',
+        imageUrl: currentCandidate.imageUrl || 'https://picsum.photos/seed/' + Date.now() + '/400/400',
         votes: 0,
       };
       setCandidates([...candidates, newCandidate]);
@@ -51,6 +78,7 @@ export default function CandidateList({ initialCandidates }: { initialCandidates
   const handleDelete = (id: string) => {
     setCandidates(candidates.filter(c => c.id !== id));
   };
+  
 
   return (
     <>
@@ -61,39 +89,16 @@ export default function CandidateList({ initialCandidates }: { initialCandidates
         </Button>
       </div>
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Photo</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Party</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {candidates.map((candidate) => (
-              <TableRow key={candidate.id}>
-                <TableCell>
-                  <Image src={candidate.imageUrl} alt={candidate.name} width={40} height={40} className="rounded-full object-cover" />
-                </TableCell>
-                <TableCell className="font-medium">{candidate.name}</TableCell>
-                <TableCell>{candidate.party}</TableCell>
-                <TableCell>{candidate.email}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(candidate.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {candidates.map((candidate) => (
+              <CandidateCard 
+                  key={candidate.id} 
+                  candidate={candidate} 
+                  onEdit={() => handleOpenDialog(candidate)} 
+                  onDelete={() => handleDelete(candidate.id)} 
+              />
+          ))}
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -113,9 +118,13 @@ export default function CandidateList({ initialCandidates }: { initialCandidates
                 <Label htmlFor="email" className="text-right">Email</Label>
                 <Input id="email" type="email" value={currentCandidate.email || ''} onChange={(e) => setCurrentCandidate({ ...currentCandidate, email: e.target.value })} className="col-span-3" />
             </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="imageUrl" className="text-right">Image URL</Label>
+              <Input id="imageUrl" value={currentCandidate.imageUrl || ''} onChange={(e) => setCurrentCandidate({ ...currentCandidate, imageUrl: e.target.value })} className="col-span-3" />
+            </div>
             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="id-image" className="text-right">ID Image</Label>
-                <Input id="id-image" type="file" className="col-span-3" />
+                <Label htmlFor="manifesto" className="text-right">Manifesto</Label>
+                <Input id="manifesto" value={currentCandidate.manifesto || ''} onChange={(e) => setCurrentCandidate({ ...currentCandidate, manifesto: e.target.value })} className="col-span-3" />
             </div>
           </div>
           <DialogFooter>
