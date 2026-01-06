@@ -30,7 +30,7 @@ export default function AdminDashboard() {
   const activeElections = elections.filter(e => e.status === 'Active').length;
 
   return (
-    <div className="p-6 h-[calc(100vh-5rem)] bg-background">
+    <div className="p-6 h-[calc(100vh-8rem)] bg-background">
       <div className="grid grid-cols-12 grid-rows-3 gap-6 h-full font-body">
         
         {/* Zone A: Main Focus */}
