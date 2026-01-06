@@ -1,9 +1,10 @@
 'use client';
 
-import { Pie, PieChart } from 'recharts';
+import { Pie, PieChart, Cell } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { electionResults } from '@/lib/data';
+import type { ChartConfig } from '@/components/ui/chart';
 
 const chartData = electionResults.partyVotes;
 
@@ -11,23 +12,16 @@ const chartConfig = {
   votes: {
     label: 'Votes',
   },
-  'Bharatiya Vikas Party': {
-    label: 'Bharatiya Vikas Party',
-    color: 'hsl(var(--chart-2))',
-  },
-  'Jan Shakti Morcha': {
-    label: 'Jan Shakti Morcha',
-    color: 'hsl(var(--chart-1))',
-  },
-  'Loktantra Rakshak Dal': {
-    label: 'Loktantra Rakshak Dal',
-    color: 'hsl(var(--chart-3))',
-  },
-  'Rashtriya Pragati Alliance': {
-    label: 'Rashtriya Pragati Alliance',
-    color: 'hsl(var(--chart-4))',
-  },
-};
+  ...Object.fromEntries(
+    chartData.map((party, index) => [
+      party.party,
+      {
+        label: party.party,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      },
+    ])
+  ),
+} satisfies ChartConfig;
 
 export default function PartyResultsChart() {
   return (
@@ -47,6 +41,9 @@ export default function PartyResultsChart() {
               innerRadius={60}
               strokeWidth={5}
             >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={chartConfig[entry.party]?.color} />
+              ))}
             </Pie>
             <ChartLegend
                 content={<ChartLegendContent nameKey="party" />}
