@@ -30,9 +30,20 @@ export type Voter = {
 export type Election = {
   id: string;
   name: string;
+  region: string;
   startDate: string;
   endDate: string;
   status: 'Upcoming' | 'Active' | 'Ended';
+  voterCount: number;
+  candidateCount: number;
+};
+
+export type OfflineLocation = {
+    id: string;
+    name: string;
+    region: string;
+    officer: string;
+    deviceStatus: 'Online' | 'Offline' | 'Syncing';
 };
 
 export const candidates: Candidate[] = [
@@ -51,10 +62,18 @@ export const voters: Voter[] = [
 ];
 
 export const elections: Election[] = [
-  { id: '1', name: 'National Election 2024', startDate: '2024-10-01', endDate: '2024-10-05', status: 'Active' },
-  { id: '2', name: 'State Assembly Election 2024', startDate: '2024-11-15', endDate: '2024-11-20', status: 'Upcoming' },
-  { id: '3', name: 'Municipal Corporation Election 2023', startDate: '2023-12-01', endDate: '2023-12-03', status: 'Ended' },
+  { id: '1', name: 'National Election 2024', region: 'All India', startDate: '2024-10-01', endDate: '2024-10-05', status: 'Active', voterCount: voters.length, candidateCount: candidates.length },
+  { id: '2', name: 'State Assembly Election 2024', region: 'Maharashtra', startDate: '2024-11-15', endDate: '2024-11-20', status: 'Upcoming', voterCount: 150000, candidateCount: 12 },
+  { id: '3', name: 'Municipal Corporation Election 2023', region: 'Mumbai', startDate: '2023-12-01', endDate: '2023-12-03', status: 'Ended', voterCount: 75000, candidateCount: 45 },
 ];
+
+export const offlineLocations: OfflineLocation[] = [
+    { id: '1', name: 'Village Hall, Rampur', region: 'North', officer: 'Anjali Sharma', deviceStatus: 'Online' },
+    { id: '2', name: 'Community Center, Jodhpur', region: 'West', officer: 'Vikram Rathore', deviceStatus: 'Syncing' },
+    { id: '3', name: 'Mobile Unit #3, Rural Area', region: 'East', officer: 'Priya Das', deviceStatus: 'Offline' },
+    { id: '4', name: 'District Office, Madurai', region: 'South', officer: 'Karthik Raja', deviceStatus: 'Online' },
+];
+
 
 const partyVotes = candidates.reduce((acc, candidate) => {
     acc[candidate.party] = (acc[candidate.party] || 0) + candidate.votes;

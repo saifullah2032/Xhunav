@@ -5,7 +5,6 @@ import {
   Vote,
   Archive,
   LogOut,
-  Settings,
   UserCircle,
   HelpCircle,
   CheckCircle2,
@@ -40,7 +39,7 @@ const navItems = [
   { href: '/admin/candidates', icon: Users, label: 'Candidates' },
   { href: '/admin/voters', icon: UserCircle, label: 'Voters' },
   { href: '/admin/elections', icon: Archive, label: 'Elections' },
-  { href: '#', icon: Settings, label: 'Settings' }
+  { href: '/admin/offline', icon: HelpCircle, label: 'Offline Polling' }
 ];
 
 function SystemStatusCard() {
@@ -114,11 +113,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <Link href="/">
                   <DropdownMenuItem>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BarChart3, Vote, LogOut, Settings, UserCircle } from 'lucide-react';
+import { BarChart3, Vote, LogOut, Settings, UserCircle, HelpCircle } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -13,6 +13,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,10 +22,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import HelpWidget from './help-widget';
 
 const navItems = [
   { href: '/voter/dashboard', icon: BarChart3, label: 'Dashboard' },
   { href: '/voter/vote', icon: Vote, label: 'Vote' },
+  { href: '/voter/helpline', icon: HelpCircle, label: 'Helpline' },
 ];
 
 export default function VoterLayout({ children }: { children: React.ReactNode }) {
@@ -51,13 +54,18 @@ export default function VoterLayout({ children }: { children: React.ReactNode })
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenuButton asChild tooltip="Sign Out">
-            <Link href="/">
-              <LogOut />
-              <span>Sign Out</span>
-            </Link>
-          </SidebarMenuButton>
+        <SidebarFooter className="p-2">
+          <HelpWidget />
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Sign Out">
+                <Link href="/">
+                  <LogOut />
+                  <span>Sign Out</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>

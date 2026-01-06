@@ -95,10 +95,10 @@ export default function VoteForm() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {candidates.map((candidate) => (
         <Card key={candidate.id} className="group relative flex flex-col overflow-hidden text-center transition-all duration-300 hover:shadow-xl">
-          <div className="relative h-64 w-full">
+          <div className="relative h-48 w-full">
             <div className="absolute inset-0 bg-primary [clip-path:polygon(0_0,_100%_0,_100%_80%,_0_100%)]">
               <Image
                 src={candidate.imageUrl}
@@ -109,16 +109,16 @@ export default function VoteForm() {
               />
             </div>
           </div>
-          <div className="flex flex-1 flex-col items-center p-6">
+          <div className="flex flex-1 flex-col items-center p-4">
             <CardContent className="p-0 flex-grow">
-              <h3 className="text-xl font-bold">{candidate.name}</h3>
-              <p className="text-md text-muted-foreground">{candidate.party}</p>
-              <p className="text-sm text-muted-foreground mt-2">{candidate.manifesto}</p>
+              <h3 className="text-lg font-bold">{candidate.name}</h3>
+              <p className="text-sm text-muted-foreground">{candidate.party}</p>
+              <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{candidate.manifesto}</p>
             </CardContent>
-            <CardFooter className="p-4 pt-4 mt-4 w-full">
+            <CardFooter className="p-0 pt-4 mt-4 w-full">
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button className="w-full" onClick={() => setSelectedCandidate(candidate)}>
+                        <Button className="w-full" size="sm" onClick={() => setSelectedCandidate(candidate)}>
                             <Vote className="mr-2 h-4 w-4" /> Vote
                         </Button>
                     </AlertDialogTrigger>

@@ -32,7 +32,7 @@ export default function ElectionList({ initialElections }: { initialElections: E
   };
 
   const handleSave = () => {
-    if (!currentElection.name || !currentElection.startDate || !currentElection.endDate || !currentElection.status) {
+    if (!currentElection.name || !currentElection.startDate || !currentElection.endDate || !currentElection.status || !currentElection.region) {
         alert("All fields are required.");
         return;
     }
@@ -55,6 +55,9 @@ export default function ElectionList({ initialElections }: { initialElections: E
         startDate: currentElection.startDate,
         endDate: currentElection.endDate,
         status: currentElection.status,
+        region: currentElection.region,
+        voterCount: currentElection.voterCount || voters.length,
+        candidateCount: currentElection.candidateCount || candidates.length
       };
       setElections([...elections, newElection]);
        if (newElection.status === 'Ended') {
@@ -97,9 +100,12 @@ export default function ElectionList({ initialElections }: { initialElections: E
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Region</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>End Date</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Voters</TableHead>
+              <TableHead>Candidates</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -107,11 +113,14 @@ export default function ElectionList({ initialElections }: { initialElections: E
             {elections.map((election) => (
               <TableRow key={election.id}>
                 <TableCell className="font-medium">{election.name}</TableCell>
+                <TableCell>{election.region}</TableCell>
                 <TableCell>{election.startDate}</TableCell>
                 <TableCell>{election.endDate}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(election.status)}>{election.status}</Badge>
                 </TableCell>
+                <TableCell>{election.voterCount}</TableCell>
+                <TableCell>{election.candidateCount}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(election)}>
                     <Edit className="h-4 w-4" />
@@ -130,11 +139,16 @@ export default function ElectionList({ initialElections }: { initialElections: E
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{isEditing ? 'Edit Election' : 'Create New Election'}</DialogTitle>
+
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">Name</Label>
               <Input id="name" value={currentElection.name || ''} onChange={(e) => setCurrentElection({ ...currentElection, name: e.target.value })} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="region" className="text-right">Region</Label>
+              <Input id="region" value={currentElection.region || ''} onChange={(e) => setCurrentElection({ ...currentElection, region: e.target.value })} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="startDate" className="text-right">Start Date</Label>
@@ -143,6 +157,14 @@ export default function ElectionList({ initialElections }: { initialElections: E
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="endDate" className="text-right">End Date</Label>
               <Input type="date" id="endDate" value={currentElection.endDate || ''} onChange={(e) => setCurrentElection({ ...currentElection, endDate: e.target.value })} className="col-span-3" />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="voterCount" className="text-right">Voter Count</Label>
+              <Input type="number" id="voterCount" value={currentElection.voterCount || ''} onChange={(e) => setCurrentElection({ ...currentElection, voterCount: Number(e.target.value) })} className="col-span-3" />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="candidateCount" className="text-right">Candidate Count</Label>
+              <Input type="number" id="candidateCount" value={currentElection.candidateCount || ''} onChange={(e) => setCurrentElection({ ...currentElection, candidateCount: Number(e.target.value) })} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="status" className="text-right">Status</Label>
