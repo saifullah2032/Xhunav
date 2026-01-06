@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Vote, ShieldCheck, Cpu, GitBranch } from 'lucide-react';
+import { Vote, ShieldCheck, GitBranch, ListChecks } from 'lucide-react';
 
 function Header() {
   return (
@@ -78,9 +78,9 @@ export default function Home() {
         <section id="about" className="py-12 md:py-24">
           <div className="container mx-auto px-4 md:px-6">
             <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">About Xhunav</h2>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">A New Era of Digital Democracy</h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                Xhunav is a forward-thinking electronic voting platform designed to showcase the future of secure, transparent, and accessible elections. Our system leverages cutting-edge technologies to ensure the integrity of every vote.
+                Our platform combines cutting-edge security with unparalleled transparency to create an e-voting system you can trust.
               </p>
             </div>
             <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -88,27 +88,27 @@ export default function Home() {
                 <div className="mb-4 rounded-full bg-primary/10 p-3">
                   <ShieldCheck className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold">Unmatched Security</h3>
+                <h3 className="text-xl font-bold">Quantum-Resistant</h3>
                 <p className="mt-2 text-muted-foreground">
-                  By utilizing post-quantum cryptography, we protect against future threats, ensuring that vote data remains secure for decades to come.
+                  Utilizing CRYSTALS-Dilithium for post-quantum digital signatures, safeguarding votes against future threats.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 rounded-full bg-primary/10 p-3">
                   <GitBranch className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold">Blockchain Integrity</h3>
+                <h3 className="text-xl font-bold">Blockchain Transparency</h3>
                 <p className="mt-2 text-muted-foreground">
-                  Every vote is recorded as a transaction on a decentralized blockchain, creating an immutable and fully auditable public ledger.
+                  Every signed vote hash is recorded on a public ledger, ensuring immutability and public verifiability.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 rounded-full bg-primary/10 p-3">
-                  <Cpu className="h-8 w-8 text-primary" />
+                  <ListChecks className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold">Cutting-Edge Tech</h3>
+                <h3 className="text-xl font-bold">Real-Time Auditing</h3>
                 <p className="mt-2 text-muted-foreground">
-                  Our platform is a stimulation of what's possible when modern technology is applied to solve critical democratic challenges.
+                  Our live dashboard provides instant vote tallies and a dynamic Transparency Index for complete public oversight.
                 </p>
               </div>
             </div>
