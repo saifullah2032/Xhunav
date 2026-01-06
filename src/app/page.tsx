@@ -9,7 +9,7 @@ function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="#" className="flex items-center gap-2" prefetch={false}>
           <Vote className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold font-headline">Xhunav E-Vote</span>
+          <span className="text-lg font-semibold font-headline">Xhunav</span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
           <Link href="#about" className="hover:text-primary hover:underline" prefetch={false}>
@@ -34,7 +34,7 @@ function Footer() {
   return (
     <footer className="w-full bg-muted py-6 px-4 md:px-6 mt-12">
       <div className="container mx-auto text-center text-sm text-muted-foreground">
-        <p>&copy; 2024 Xhunav E-Vote. All rights reserved.</p>
+        <p>&copy; 2024 Xhunav. All rights reserved.</p>
         <p className="mt-1">A secure e-voting platform stimulation.</p>
       </div>
     </footer>
@@ -55,7 +55,7 @@ export default function Home() {
               <div className="mx-auto bg-primary rounded-full p-3 w-fit mb-4">
                 <Vote className="h-10 w-10 text-primary-foreground" />
               </div>
-              <CardTitle className="text-3xl font-bold font-headline">Xhunav E-Vote</CardTitle>
+              <CardTitle className="text-3xl font-bold font-headline">Xhunav</CardTitle>
               <CardDescription>
                 Stimulation of e-voting through blockchain and post-quantum cryptography.
               </CardDescription>
@@ -78,9 +78,9 @@ export default function Home() {
         <section id="about" className="py-12 md:py-24">
           <div className="container mx-auto px-4 md:px-6">
             <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">About Xhunav E-Vote</h2>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">About Xhunav</h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                Xhunav E-Vote is a forward-thinking electronic voting platform designed to showcase the future of secure, transparent, and accessible elections. Our system leverages cutting-edge technologies to ensure the integrity of every vote.
+                Xhunav is a forward-thinking electronic voting platform designed to showcase the future of secure, transparent, and accessible elections. Our system leverages cutting-edge technologies to ensure the integrity of every vote.
               </p>
             </div>
             <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
