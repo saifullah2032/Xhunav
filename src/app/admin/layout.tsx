@@ -96,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="p-4 sm:p-6 lg:p-8 overflow-hidden">{children}</main>
+        <main className="p-4 sm:p-6 lg:p-4 overflow-hidden">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

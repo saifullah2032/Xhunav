@@ -25,13 +25,13 @@ export default function PartyResultsChart() {
   }, []);
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Party Standings</CardTitle>
         <CardDescription>Total votes by party</CardDescription>
       </CardHeader>
-      <CardContent className="flex items-center justify-center">
-        <ChartContainer config={chartConfig} className="min-h-[250px] w-full max-w-[250px]">
+      <CardContent className="flex-1 flex items-center justify-center pb-0">
+        <ChartContainer config={chartConfig} className="w-full h-full min-h-0">
           <PieChart accessibilityLayer>
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Pie
@@ -40,14 +40,16 @@ export default function PartyResultsChart() {
               nameKey="party"
               innerRadius={60}
               strokeWidth={5}
+              labelLine={false}
+              label={({-percent, -name}: any) => `${name} (${(percent * 100).toFixed(0)}%)`}
             >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={chartConfig[entry.party]?.color} />
+              {chartData.map((entry) => (
+                <Cell key={`cell-${entry.party}`} fill={chartConfig[entry.party]?.color} />
               ))}
             </Pie>
             <ChartLegend
                 content={<ChartLegendContent nameKey="party" />}
-                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                className="flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
             />
           </PieChart>
         </ChartContainer>

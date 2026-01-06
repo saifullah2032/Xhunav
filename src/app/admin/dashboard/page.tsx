@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Archive, UserCheck } from 'lucide-react';
-import { elections, candidates, voters } from '@/lib/data';
+import { Users, Archive, UserCheck, Vote } from 'lucide-react';
+import { elections, candidates, voters, electionResults } from '@/lib/data';
 import ResultsChart from '@/app/voter/dashboard/results-chart';
 import PartyResultsChart from '@/app/voter/dashboard/party-results-chart';
 import LeadingCandidateCard from '@/app/voter/dashboard/leading-candidate-card';
@@ -9,8 +9,9 @@ export default function AdminDashboard() {
   const activeElections = elections.filter(e => e.status === 'Active').length;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] gap-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] gap-4">
+      <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Voters</CardTitle>
@@ -41,15 +42,20 @@ export default function AdminDashboard() {
             <p className="text-xs text-muted-foreground">Currently running</p>
           </CardContent>
         </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Votes Cast</CardTitle>
+            <Vote className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{electionResults.totalVotes.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Across all candidates</p>
+          </CardContent>
+        </Card>
       </div>
-      <div className="flex flex-1 gap-6">
-        <div className="w-[61.8%]">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4">
           <ResultsChart />
-        </div>
-        <div className="w-[38.2%] flex flex-col gap-6">
-          <LeadingCandidateCard />
           <PartyResultsChart />
-        </div>
       </div>
     </div>
   );
