@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import type { Voter } from '@/lib/data';
+import { sendVoterAddedEmail } from '@/lib/mail';
 
 export default function VoterList({ initialVoters }: { initialVoters: Voter[] }) {
   const [voters, setVoters] = useState(initialVoters);
@@ -33,6 +34,7 @@ export default function VoterList({ initialVoters }: { initialVoters: Voter[] })
         idImageUrl: currentVoter.idImageUrl || 'https://picsum.photos/seed/id-' + Date.now() + '/400/400',
       };
       setVoters([...voters, newVoter]);
+      sendVoterAddedEmail(newVoter);
     }
     setIsDialogOpen(false);
   };

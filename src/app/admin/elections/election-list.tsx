@@ -9,13 +9,27 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
-import type { Election } from '@/lib/data';
+import type { Election, Candidate, Voter } from '@/lib/data';
+import { candidates, voters } from '@/lib/data';
+import { sendElectionWinnerEmail, sendElectionResultsEmail } from '@/lib/mail';
 
 export default function ElectionList({ initialElections }: { initialElections: Election[] }) {
   const [elections, setElections] = useState(initialElections);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentElection, setCurrentElection] = useState<Partial<Election>>({});
+
+  const handleElectionEnd = (election: Election) => {
+    // This is a simulation. In a real app, you'd fetch live results.
+    const winner = candidates.reduce((prev, current) => (prev.votes > current.votes) ? prev : current);
+    
+    // Send email to winner
+    sendElectionWinnerEmail(winner);
+
+    // Send email to all candidates and voters
+    const allCandidatesAndVoters: (Candidate | Voter)[] = [...candidates, ...voters];
+    sendElectionResultsEmail(allCandidatesAndVoters, winner, election);
+  };
 
   const handleSave = () => {
     if (!currentElection.name || !currentElection.startDate || !currentElection.endDate || !currentElection.status) {
@@ -24,7 +38,16 @@ export default function ElectionList({ initialElections }: { initialElections: E
     }
 
     if (isEditing) {
-      setElections(elections.map(e => e.id === currentElection.id ? { ...e, ...currentElection } as Election : e));
+      const updatedElections = elections.map(e => e.id === currentElection.id ? { ...e, ...currentElection } as Election : e);
+      setElections(updatedElections);
+      
+      const updatedElection = updatedElections.find(e => e.id === currentElection.id);
+      if (updatedElection && updatedElection.status === 'Ended') {
+        const originalElection = elections.find(e => e.id === currentElection.id);
+        if (originalElection && originalElection.status !== 'Ended') {
+            handleElectionEnd(updatedElection);
+        }
+      }
     } else {
       const newElection: Election = {
         id: (Date.now()).toString(),
@@ -34,6 +57,9 @@ export default function ElectionList({ initialElections }: { initialElections: E
         status: currentElection.status,
       };
       setElections([...elections, newElection]);
+       if (newElection.status === 'Ended') {
+        handleElectionEnd(newElection);
+      }
     }
     setIsDialogOpen(false);
   };

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import type { Candidate } from '@/lib/data';
+import { sendCandidateAddedEmail } from '@/lib/mail';
 
 export default function CandidateList({ initialCandidates }: { initialCandidates: Candidate[] }) {
   const [candidates, setCandidates] = useState(initialCandidates);
@@ -30,11 +31,13 @@ export default function CandidateList({ initialCandidates }: { initialCandidates
         name: currentCandidate.name,
         party: currentCandidate.party,
         email: currentCandidate.email,
+        manifesto: 'New candidate manifesto.',
         idImageUrl: currentCandidate.idImageUrl || 'https://picsum.photos/seed/id-' + Date.now() + '/400/400',
         imageUrl: 'https://picsum.photos/seed/' + Date.now() + '/400/400',
         votes: 0,
       };
       setCandidates([...candidates, newCandidate]);
+      sendCandidateAddedEmail(newCandidate);
     }
     setIsDialogOpen(false);
   };

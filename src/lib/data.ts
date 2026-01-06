@@ -7,6 +7,8 @@ export interface Candidate {
   manifesto: string;
   imageUrl: string;
   votes: number; // For simulation purposes
+  email: string;
+  idImageUrl: string;
 }
 
 export interface VoteTransaction {
@@ -34,10 +36,10 @@ export type Election = {
 };
 
 export const candidates: Candidate[] = [
-  { id: '1', name: 'Aarav Sharma', party: 'Bharatiya Vikas Party', manifesto: 'Focus on economic growth and infrastructure.', imageUrl: placeholderImages[0].imageUrl, votes: 1200 },
-  { id: '2', name: 'Saanvi Gupta', party: 'Jan Shakti Morcha', manifesto: 'Promoting social justice and equality.', imageUrl: placeholderImages[1].imageUrl, votes: 950 },
-  { id: '3', name: 'Vivaan Singh', party: 'Loktantra Rakshak Dal', manifesto: 'Strengthening democratic institutions.', imageUrl: placeholderImages[2].imageUrl, votes: 1500 },
-  { id: '4', name: 'Myra Reddy', party: 'Rashtriya Pragati Alliance', manifesto: 'Driving technological innovation.', imageUrl: placeholderImages[3].imageUrl, votes: 780 },
+  { id: '1', name: 'Aarav Sharma', party: 'Bharatiya Vikas Party', manifesto: 'Focus on economic growth and infrastructure.', imageUrl: placeholderImages[0].imageUrl, votes: 1200, email: 'aarav.sharma@example.com', idImageUrl: 'https://picsum.photos/seed/cid-1/400/400' },
+  { id: '2', name: 'Saanvi Gupta', party: 'Jan Shakti Morcha', manifesto: 'Promoting social justice and equality.', imageUrl: placeholderImages[1].imageUrl, votes: 950, email: 'saanvi.gupta@example.com', idImageUrl: 'https://picsum.photos/seed/cid-2/400/400' },
+  { id: '3', name: 'Vivaan Singh', party: 'Loktantra Rakshak Dal', manifesto: 'Strengthening democratic institutions.', imageUrl: placeholderImages[2].imageUrl, votes: 1500, email: 'vivaan.singh@example.com', idImageUrl: 'https://picsum.photos/seed/cid-3/400/400' },
+  { id: '4', name: 'Myra Reddy', party: 'Rashtriya Pragati Alliance', manifesto: 'Driving technological innovation.', imageUrl: placeholderImages[3].imageUrl, votes: 780, email: 'myra.reddy@example.com', idImageUrl: 'https://picsum.photos/seed/cid-4/400/400' },
 ];
 
 export const voters: Voter[] = [
