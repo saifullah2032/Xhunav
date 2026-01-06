@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Archive, UserCheck } from 'lucide-react';
 import { elections, candidates, voters } from '@/lib/data';
+import ResultsChart from '@/app/voter/dashboard/results-chart';
+import PartyResultsChart from '@/app/voter/dashboard/party-results-chart';
+import LeadingCandidateCard from '@/app/voter/dashboard/leading-candidate-card';
 
 export default function AdminDashboard() {
   const activeElections = elections.filter(e => e.status === 'Active').length;
@@ -40,17 +43,11 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Welcome, Admin!</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>
-            You can manage voters, candidates, and elections from the sidebar menu. Monitor the
-            platform's activity and ensure a smooth and secure voting process for everyone.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <LeadingCandidateCard />
+        <PartyResultsChart />
+      </div>
+      <ResultsChart />
     </div>
   );
 }

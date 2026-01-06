@@ -9,7 +9,7 @@ export type Candidate = {
 };
 
 export type Voter = {
-  id: string;
+  id:string;
   name: string;
   voterId: string;
 };
@@ -43,7 +43,13 @@ export const elections: Election[] = [
   { id: '3', name: 'Municipal Corporation Election 2023', startDate: '2023-12-01', endDate: '2023-12-03', status: 'Ended' },
 ];
 
+const partyVotes = candidates.reduce((acc, candidate) => {
+    acc[candidate.party] = (acc[candidate.party] || 0) + candidate.votes;
+    return acc;
+  }, {} as Record<string, number>);
+
 export const electionResults = {
   totalVotes: candidates.reduce((acc, c) => acc + c.votes, 0),
   candidateVotes: candidates.map(c => ({ name: c.name, party: c.party, votes: c.votes })),
+  partyVotes: Object.entries(partyVotes).map(([party, votes]) => ({ party, votes })),
 };
