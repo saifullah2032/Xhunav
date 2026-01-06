@@ -13,11 +13,11 @@ const chartConfig = {
   },
   'Bharatiya Vikas Party': {
     label: 'Bharatiya Vikas Party',
-    color: 'hsl(var(--chart-1))',
+    color: 'hsl(var(--chart-2))',
   },
   'Jan Shakti Morcha': {
     label: 'Jan Shakti Morcha',
-    color: 'hsl(var(--chart-2))',
+    color: 'hsl(var(--chart-1))',
   },
   'Loktantra Rakshak Dal': {
     label: 'Loktantra Rakshak Dal',
