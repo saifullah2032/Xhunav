@@ -12,25 +12,34 @@ import { sendCandidateAddedEmail } from '@/lib/mail';
 
 function CandidateCard({ candidate, onEdit, onDelete }: { candidate: Candidate, onEdit: () => void, onDelete: () => void }) {
   return (
-    <Card className="flex flex-col items-center p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <div className="relative mb-4">
-        <Image src={candidate.imageUrl} alt={candidate.name} width={100} height={100} className="rounded-full object-cover" />
-        <div className="absolute top-0 right-0 flex items-center gap-1 rounded-full bg-accent/90 px-2 py-1 text-xs font-bold text-accent-foreground">
+    <Card className="group relative flex flex-col overflow-hidden text-center transition-all duration-300 hover:shadow-xl">
+      <div className="relative h-48 w-full">
+        <div className="absolute inset-0 bg-primary [clip-path:polygon(0_0,_100%_0,_100%_80%,_0_100%)]">
+             <Image 
+                src={candidate.imageUrl} 
+                alt={candidate.name} 
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col items-center p-6">
+        <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-accent/90 px-2 py-1 text-xs font-bold text-accent-foreground">
           <Star className="h-3 w-3" />
           <span>{ (candidate.votes / 1000).toFixed(1) }k</span>
         </div>
-      </div>
-      <CardContent className="p-0 flex-grow">
-        <h3 className="text-lg font-bold">{candidate.name}</h3>
-        <p className="text-sm text-muted-foreground">{candidate.party}</p>
-      </CardContent>
-      <div className="mt-4 flex w-full items-center gap-2">
-        <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
-          <Edit className="mr-2 h-3 w-3" /> Edit
-        </Button>
-        <Button variant="ghost" size="icon" className="text-destructive" onClick={onDelete}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <CardContent className="p-0 flex-grow">
+          <h3 className="text-lg font-bold">{candidate.name}</h3>
+          <p className="text-sm text-muted-foreground">{candidate.party}</p>
+        </CardContent>
+        <div className="mt-4 flex w-full items-center gap-2">
+            <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
+              <Edit className="mr-2 h-3 w-3" /> Edit
+            </Button>
+            <Button variant="ghost" size="icon" className="text-destructive" onClick={onDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+        </div>
       </div>
     </Card>
   );
