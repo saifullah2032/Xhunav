@@ -1,5 +1,6 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import type { Candidate } from '@/app/admin/candidates/candidate-list';
+import { seedDatabase } from '@/lib/seed';
 
 
 // Faking a cryptographic library
@@ -32,9 +34,16 @@ const fakeCrypto = {
 export default function VoteForm() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const candidatesRef = useMemoFirebase(() => collection(firestore, 'candidates'), [firestore]);
+  
+  useEffect(() => {
+    if (firestore) {
+      seedDatabase(firestore);
+    }
+  }, [firestore]);
+
+  const candidatesRef = useMemoFirebase(() => firestore ? collection(firestore, 'candidates') : null, [firestore]);
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(candidatesRef);
-  const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
+  const votesRef = useMemoFirebase(() => firestore ? collection(firestore, 'votes') : null, [firestore]);
 
 
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -42,7 +51,7 @@ export default function VoteForm() {
   const [isSigning, setIsSigning] = useState(false);
 
   const handleVote = async () => {
-    if (!selectedCandidate) return;
+    if (!selectedCandidate || !votesRef) return;
 
     setIsSigning(true);
 

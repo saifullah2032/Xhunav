@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, ShieldCheck, AlertTriangle } from 'lucide-react';
@@ -8,6 +9,8 @@ import VoterTurnoutChart from './voter-turnout-chart';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Voter } from '../voters/voter-list';
+import { useEffect } from 'react';
+import { seedDatabase } from '@/lib/seed';
 
 
 function StatCard({ title, value, icon: Icon, subtext }: { title: string, value: string, icon: React.ElementType, subtext: string }) {
@@ -27,7 +30,14 @@ function StatCard({ title, value, icon: Icon, subtext }: { title: string, value:
 
 export default function AdminDashboard() {
   const firestore = useFirestore();
-  const votersRef = useMemoFirebase(() => collection(firestore, 'voters'), [firestore]);
+
+  useEffect(() => {
+    if (firestore) {
+      seedDatabase(firestore);
+    }
+  }, [firestore]);
+  
+  const votersRef = useMemoFirebase(() => firestore ? collection(firestore, 'voters') : null, [firestore]);
   const { data: voters, isLoading } = useCollection<Voter>(votersRef);
 
   if (isLoading) {

@@ -1,5 +1,6 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -15,6 +16,7 @@ import { collection, doc } from 'firebase/firestore';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import type { Candidate } from '../candidates/candidate-list';
 import type { Voter } from '../voters/voter-list';
+import { seedDatabase } from '@/lib/seed';
 
 export type Election = {
   id: string;
@@ -29,16 +31,23 @@ export type Election = {
 
 export default function ElectionList() {
   const firestore = useFirestore();
-  const electionsRef = useMemoFirebase(() => collection(firestore, 'elections'), [firestore]);
+  
+  useEffect(() => {
+    if (firestore) {
+      seedDatabase(firestore);
+    }
+  }, [firestore]);
+  
+  const electionsRef = useMemoFirebase(() => firestore ? collection(firestore, 'elections') : null, [firestore]);
   const { data: elections, isLoading: electionsLoading } = useCollection<Election>(electionsRef);
   
-  const candidatesRef = useMemoFirebase(() => collection(firestore, 'candidates'), [firestore]);
+  const candidatesRef = useMemoFirebase(() => firestore ? collection(firestore, 'candidates') : null, [firestore]);
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(candidatesRef);
 
-  const votersRef = useMemoFirebase(() => collection(firestore, 'voters'), [firestore]);
+  const votersRef = useMemoFirebase(() => firestore ? collection(firestore, 'voters') : null, [firestore]);
   const { data: voters, isLoading: votersLoading } = useCollection<Voter>(votersRef);
   
-  const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
+  const votesRef = useMemoFirebase(() => firestore ? collection(firestore, 'votes') : null, [firestore]);
   const { data: votes, isLoading: votesLoading } = useCollection<{candidateId: string}>(votesRef);
 
 
@@ -84,6 +93,7 @@ export default function ElectionList() {
   };
 
   const handleSave = () => {
+    if (!firestore) return;
     if (!currentElection.name || !currentElection.startDate || !currentElection.endDate || !currentElection.status || !currentElection.region) {
         alert("All fields are required.");
         return;
@@ -104,7 +114,9 @@ export default function ElectionList() {
         voterCount: currentElection.voterCount || 0,
         candidateCount: currentElection.candidateCount || 0,
       };
-      addDocumentNonBlocking(electionsRef, newElection);
+      if (electionsRef) {
+        addDocumentNonBlocking(electionsRef, newElection);
+      }
     }
 
     if (currentElection.status === 'Ended' && originalElection?.status !== 'Ended') {
@@ -122,6 +134,7 @@ export default function ElectionList() {
   };
   
   const handleDelete = (id: string) => {
+    if (!firestore) return;
     const electionDocRef = doc(firestore, 'elections', id);
     deleteDocumentNonBlocking(electionDocRef);
   };

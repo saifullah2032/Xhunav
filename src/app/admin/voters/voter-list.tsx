@@ -1,5 +1,6 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -11,6 +12,7 @@ import { sendVoterAddedEmail } from '@/lib/mail';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { seedDatabase } from '@/lib/seed';
 
 export interface Voter {
   id: string;
@@ -54,7 +56,14 @@ function VoterCard({ voter, onEdit, onDelete }: { voter: Voter, onEdit: () => vo
 
 export default function VoterList() {
   const firestore = useFirestore();
-  const votersRef = useMemoFirebase(() => collection(firestore, 'voters'), [firestore]);
+  
+  useEffect(() => {
+    if (firestore) {
+      seedDatabase(firestore);
+    }
+  }, [firestore]);
+
+  const votersRef = useMemoFirebase(() => firestore ? collection(firestore, 'voters') : null, [firestore]);
   const { data: voters, isLoading } = useCollection<Voter>(votersRef);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -62,6 +71,7 @@ export default function VoterList() {
   const [currentVoter, setCurrentVoter] = useState<Partial<Voter>>({});
 
   const handleSave = async () => {
+    if (!firestore) return;
     if (!currentVoter.name || !currentVoter.voterId || !currentVoter.email) {
         alert("Name, Voter ID, and Email are required.");
         return;
@@ -77,8 +87,12 @@ export default function VoterList() {
         email: currentVoter.email,
         idImageUrl: currentVoter.idImageUrl || 'https://picsum.photos/seed/id-' + Date.now() + '/400/400',
       };
-      const newDocRef = await addDocumentNonBlocking(votersRef, newVoter);
-      sendVoterAddedEmail({ ...newVoter, id: newDocRef.id });
+      if (votersRef) {
+        const newDocRef = await addDocumentNonBlocking(votersRef, newVoter);
+        if (newDocRef) {
+            sendVoterAddedEmail({ ...newVoter, id: newDocRef.id });
+        }
+      }
     }
     setIsDialogOpen(false);
     setCurrentVoter({});
@@ -91,6 +105,7 @@ export default function VoterList() {
   };
 
   const handleDelete = (id: string) => {
+    if (!firestore) return;
     const voterDocRef = doc(firestore, 'voters', id);
     deleteDocumentNonBlocking(voterDocRef);
   };

@@ -1,5 +1,6 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -11,6 +12,7 @@ import { sendCandidateAddedEmail } from '@/lib/mail';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { seedDatabase } from '@/lib/seed';
 
 
 // This should be defined in a types file
@@ -46,7 +48,7 @@ function CandidateCard({ candidate, onEdit, onDelete, voteCount }: { candidate: 
       <div className="flex flex-1 flex-col items-center p-6">
         <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-accent/90 px-2 py-1 text-xs font-bold text-accent-foreground">
           <Star className="h-3 w-3" />
-          <span>{ (voteCount / 1000).toFixed(1) }k</span>
+          <span>{voteCount}</span>
         </div>
         <CardContent className="p-0 flex-grow">
           <h3 className="text-lg font-bold">{candidate.name}</h3>
@@ -68,10 +70,17 @@ function CandidateCard({ candidate, onEdit, onDelete, voteCount }: { candidate: 
 
 export default function CandidateList() {
   const firestore = useFirestore();
-  const candidatesRef = useMemoFirebase(() => collection(firestore, 'candidates'), [firestore]);
+  
+  useEffect(() => {
+    if (firestore) {
+      seedDatabase(firestore);
+    }
+  }, [firestore]);
+
+  const candidatesRef = useMemoFirebase(() => firestore ? collection(firestore, 'candidates') : null, [firestore]);
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(candidatesRef);
   
-  const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
+  const votesRef = useMemoFirebase(() => firestore ? collection(firestore, 'votes') : null, [firestore]);
   const { data: votes, isLoading: votesLoading } = useCollection<Vote>(votesRef);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,6 +93,7 @@ export default function CandidateList() {
   };
 
   const handleSave = async () => {
+    if (!firestore) return;
     if (!currentCandidate.name || !currentCandidate.party || !currentCandidate.email) {
         alert("Name, Party, and Email are required.");
         return;
@@ -101,8 +111,12 @@ export default function CandidateList() {
             idImageUrl: currentCandidate.idImageUrl || 'https://picsum.photos/seed/id-' + Date.now() + '/400/400',
             imageUrl: currentCandidate.imageUrl || 'https://picsum.photos/seed/' + Date.now() + '/400/400',
         };
-        const newDocRef = await addDocumentNonBlocking(candidatesRef, newCandidate);
-        sendCandidateAddedEmail({ ...newCandidate, id: newDocRef.id });
+        if (candidatesRef) {
+          const newDocRef = await addDocumentNonBlocking(candidatesRef, newCandidate);
+          if (newDocRef) {
+            sendCandidateAddedEmail({ ...newCandidate, id: newDocRef.id });
+          }
+        }
     }
     setIsDialogOpen(false);
     setCurrentCandidate({});
@@ -115,6 +129,7 @@ export default function CandidateList() {
   };
 
   const handleDelete = (id: string) => {
+    if (!firestore) return;
     const candidateDocRef = doc(firestore, 'candidates', id);
     deleteDocumentNonBlocking(candidateDocRef);
   };

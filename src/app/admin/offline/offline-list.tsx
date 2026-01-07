@@ -1,5 +1,6 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -12,6 +13,7 @@ import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { seedDatabase } from '@/lib/seed';
 
 
 export type OfflineLocation = {
@@ -24,7 +26,14 @@ export type OfflineLocation = {
 
 export default function OfflineLocationList() {
     const firestore = useFirestore();
-    const locationsRef = useMemoFirebase(() => collection(firestore, 'offlineLocations'), [firestore]);
+    
+    useEffect(() => {
+        if (firestore) {
+          seedDatabase(firestore);
+        }
+    }, [firestore]);
+
+    const locationsRef = useMemoFirebase(() => firestore ? collection(firestore, 'offlineLocations'): null, [firestore]);
     const { data: locations, isLoading } = useCollection<OfflineLocation>(locationsRef);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,6 +41,7 @@ export default function OfflineLocationList() {
   const [currentLocation, setCurrentLocation] = useState<Partial<OfflineLocation>>({});
 
   const handleSave = () => {
+    if (!firestore) return;
     if (!currentLocation.name || !currentLocation.region || !currentLocation.officer || !currentLocation.deviceStatus) {
         alert("All fields are required.");
         return;
@@ -47,7 +57,9 @@ export default function OfflineLocationList() {
         officer: currentLocation.officer,
         deviceStatus: currentLocation.deviceStatus as OfflineLocation['deviceStatus'],
       };
-      addDocumentNonBlocking(locationsRef, newLocation);
+      if (locationsRef) {
+        addDocumentNonBlocking(locationsRef, newLocation);
+      }
     }
     setIsDialogOpen(false);
     setCurrentLocation({});
@@ -60,6 +72,7 @@ export default function OfflineLocationList() {
   };
   
   const handleDelete = (id: string) => {
+    if (!firestore) return;
     const locationDocRef = doc(firestore, 'offlineLocations', id);
     deleteDocumentNonBlocking(locationDocRef);
   };

@@ -1,8 +1,9 @@
+
 'use client';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { useMemo } from 'react';
 
 interface Vote {
@@ -11,31 +12,45 @@ interface Vote {
 
 export default function RealTimeVoteTally() {
   const firestore = useFirestore();
-  const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
-  const { data: votes, isLoading } = useCollection<Vote>(votesRef);
+  const votesQuery = useMemoFirebase(() => 
+    firestore ? query(collection(firestore, 'votes'), orderBy('timestamp', 'asc')) : null,
+    [firestore]
+  );
+  const { data: votes, isLoading } = useCollection<Vote>(votesQuery);
 
   const chartData = useMemo(() => {
     if (!votes) return [];
     
     // Group votes by hour
     const hourlyVotes: {[key: string]: number} = {};
+    let cumulativeVotes = 0;
+    const dataPoints: { time: string, votes: number }[] = [];
+    
+    if (votes.length === 0) return [];
+
+    const firstVoteTime = new Date(votes[0].timestamp);
+    let currentTimeBin = new Date(firstVoteTime);
+    currentTimeBin.setMinutes(0, 0, 0);
+
     votes.forEach(vote => {
-      const date = new Date(vote.timestamp);
-      const hour = date.getHours();
-      const time = `${hour}:00`;
-      if (!hourlyVotes[time]) {
-        hourlyVotes[time] = 0;
+      const voteTime = new Date(vote.timestamp);
+      
+      while (voteTime > new Date(currentTimeBin.getTime() + 3600000)) {
+        const time = `${currentTimeBin.getHours()}:00`;
+        dataPoints.push({ time, votes: cumulativeVotes });
+        currentTimeBin = new Date(currentTimeBin.getTime() + 3600000);
       }
-      hourlyVotes[time]++;
+
+      cumulativeVotes++;
     });
 
-    const sortedHours = Object.keys(hourlyVotes).sort((a,b) => parseInt(a) - parseInt(b));
-    
-    let cumulativeVotes = 0;
-    return sortedHours.map(time => {
-        cumulativeVotes += hourlyVotes[time];
-        return { time, votes: cumulativeVotes };
-    });
+    // Add the last bin
+    const time = `${currentTimeBin.getHours()}:00`;
+    dataPoints.push({ time, votes: cumulativeVotes });
+
+
+    return dataPoints.map(p => ({...p, votes: p.votes}));
+
 
   }, [votes]);
 
@@ -60,7 +75,7 @@ export default function RealTimeVoteTally() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="time" />
-            <YAxis />
+            <YAxis allowDecimals={false} />
             <Tooltip
                 contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
