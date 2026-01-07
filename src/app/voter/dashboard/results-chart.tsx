@@ -1,18 +1,47 @@
 'use client';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { useMemo } from 'react';
 
-const data = [
-  { time: '10:00', votes: 200 },
-  { time: '11:00', votes: 450 },
-  { time: '12:00', votes: 600 },
-  { time: '13:00', votes: 1200 },
-  { time: '14:00', votes: 1800 },
-  { time: '15:00', votes: 2100 },
-  { time: '16:00', votes: 3430 },
-];
+interface Vote {
+  timestamp: number;
+}
 
 export default function RealTimeVoteTally() {
+  const firestore = useFirestore();
+  const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
+  const { data: votes, isLoading } = useCollection<Vote>(votesRef);
+
+  const chartData = useMemo(() => {
+    if (!votes) return [];
+    
+    const hourlyVotes: {[key: string]: number} = {};
+    votes.forEach(vote => {
+      const date = new Date(vote.timestamp);
+      const hour = date.getHours();
+      const time = `${hour}:00`;
+      if (!hourlyVotes[time]) {
+        hourlyVotes[time] = 0;
+      }
+      hourlyVotes[time]++;
+    });
+
+    const sortedHours = Object.keys(hourlyVotes).sort((a,b) => parseInt(a) - parseInt(b));
+    
+    let cumulativeVotes = 0;
+    return sortedHours.map(time => {
+        cumulativeVotes += hourlyVotes[time];
+        return { time, votes: cumulativeVotes };
+    });
+
+  }, [votes]);
+
+  if (isLoading) {
+      return <div>Loading chart...</div>
+  }
+
   return (
     <Card className="rounded-2xl shadow-sm h-full col-span-2">
       <CardHeader>
@@ -21,7 +50,7 @@ export default function RealTimeVoteTally() {
       </CardHeader>
       <CardContent className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorVotes" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>

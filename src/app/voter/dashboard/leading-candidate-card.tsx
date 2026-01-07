@@ -1,11 +1,81 @@
-import Image from 'next/image';
+'use client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { electionResults } from '@/lib/data';
 import { Award } from 'lucide-react';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Candidate } from '@/app/admin/candidates/candidate-list';
+import { useMemo } from 'react';
+
+interface Vote {
+  candidateId: string;
+}
 
 export default function LeadingCandidateCard() {
-    const leadingCandidate = electionResults.candidateVotes.reduce((prev, current) => (prev.votes > current.votes) ? prev : current);
-    const leadingParty = electionResults.partyVotes.reduce((prev, current) => (prev.votes > current.votes) ? prev : current);
+    const firestore = useFirestore();
+    const candidatesRef = useMemoFirebase(() => collection(firestore, 'candidates'), [firestore]);
+    const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(candidatesRef);
+    const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
+    const { data: votes, isLoading: votesLoading } = useCollection<Vote>(votesRef);
+
+    const { leadingCandidate, leadingParty } = useMemo(() => {
+        if (!candidates || !votes) return { leadingCandidate: null, leadingParty: null };
+
+        const voteCounts: { [id: string]: number } = {};
+        votes.forEach(vote => {
+            voteCounts[vote.candidateId] = (voteCounts[vote.candidateId] || 0) + 1;
+        });
+        
+        let maxVotes = -1;
+        let leading: Candidate | null = null;
+        candidates.forEach(c => {
+            if((voteCounts[c.id] || 0) > maxVotes) {
+                maxVotes = voteCounts[c.id] || 0;
+                leading = c;
+            }
+        });
+
+        const partyVotes: { [party: string]: number } = {};
+        candidates.forEach(c => {
+            const partyVoteCount = voteCounts[c.id] || 0;
+            partyVotes[c.party] = (partyVotes[c.party] || 0) + partyVoteCount;
+        });
+
+        let maxPartyVotes = -1;
+        let leadingPartyName: string | null = null;
+        Object.entries(partyVotes).forEach(([party, count]) => {
+            if(count > maxPartyVotes) {
+                maxPartyVotes = count;
+                leadingPartyName = party;
+            }
+        });
+
+        return {
+            leadingCandidate: leading ? { ...leading, votes: maxVotes} : null,
+            leadingParty: leadingPartyName ? { party: leadingPartyName, votes: maxPartyVotes } : null,
+        }
+
+    }, [candidates, votes]);
+
+    const isLoading = candidatesLoading || votesLoading;
+
+    if (isLoading) {
+        return <div>Loading...</div>
+    }
+
+    if (!leadingCandidate || !leadingParty) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Currently in the Lead</CardTitle>
+                    <CardDescription>Based on live vote counts</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p>No votes cast yet.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
 
     return (
         <Card>

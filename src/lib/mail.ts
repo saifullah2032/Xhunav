@@ -1,4 +1,6 @@
-import type { Candidate, Voter, Election } from './data';
+import type { Candidate } from '@/app/admin/candidates/candidate-list';
+import type { Voter } from '@/app/admin/voters/voter-list';
+import type { Election } from '@/app/admin/elections/election-list';
 
 async function sendEmail(to: string, subject: string, body: string) {
     try {
@@ -48,9 +50,9 @@ export function sendElectionWinnerEmail(winner: Candidate) {
     sendEmail(winner.email, subject, body);
 }
 
-export function sendElectionResultsEmail(recipients: (Candidate | Voter)[], winner: Candidate, election: Election) {
+export function sendElectionResultsEmail(recipients: (Candidate | Voter)[], winner: Candidate, election: Election, voteCount: number) {
     const subject = `Results for ${election.name}`;
-    const body = `Dear Voter/Candidate,\n\nThe ${election.name} has concluded.\n\nThe winner is ${winner.name} of the ${winner.party} with ${winner.votes.toLocaleString()} votes.\n\nThank you for your participation in this democratic process.\n\nSincerely,\nThe Xhunav Election Commission`;
+    const body = `Dear Voter/Candidate,\n\nThe ${election.name} has concluded.\n\nThe winner is ${winner.name} of the ${winner.party} with ${voteCount.toLocaleString()} votes.\n\nThank you for your participation in this democratic process.\n\nSincerely,\nThe Xhunav Election Commission`;
 
     recipients.forEach(recipient => {
         if (recipient.id !== winner.id) {

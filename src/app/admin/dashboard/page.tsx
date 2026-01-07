@@ -1,10 +1,14 @@
+'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BarChart, Users, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Users, ShieldCheck, AlertTriangle } from 'lucide-react';
 import RealTimeVoteTally from './real-time-vote-tally';
 import TransparencyIndexChart from './transparency-index-chart';
 import VotesPerCandidateChart from './votes-per-candidate-chart';
 import VoterTurnoutChart from './voter-turnout-chart';
-import { voters } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Voter } from '../voters/voter-list';
+
 
 function StatCard({ title, value, icon: Icon, subtext }: { title: string, value: string, icon: React.ElementType, subtext: string }) {
   return (
@@ -22,6 +26,14 @@ function StatCard({ title, value, icon: Icon, subtext }: { title: string, value:
 }
 
 export default function AdminDashboard() {
+  const firestore = useFirestore();
+  const votersRef = useMemoFirebase(() => collection(firestore, 'voters'), [firestore]);
+  const { data: voters, isLoading } = useCollection<Voter>(votersRef);
+
+  if (isLoading) {
+    return <div>Loading Dashboard...</div>
+  }
+
   return (
     <div className="grid grid-cols-12 gap-6 font-body">
       {/* Zone A: Real-Time Vote Tally */}
@@ -48,7 +60,7 @@ export default function AdminDashboard() {
       {/* Col 3: Stacked Small Cards */}
       <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
         <div className="grid grid-cols-2 gap-6">
-           <StatCard title="Total Voters" value={voters.length.toLocaleString()} icon={Users} subtext="Registered" />
+           <StatCard title="Total Voters" value={(voters?.length || 0).toLocaleString()} icon={Users} subtext="Registered" />
            <StatCard title="Active Nodes" value="1,204" icon={ShieldCheck} subtext="Blockchain Network" />
         </div>
         <Card className="bg-white rounded-2xl shadow-sm">

@@ -9,10 +9,24 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
-import type { OfflineLocation } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-export default function OfflineLocationList({ initialLocations }: { initialLocations: OfflineLocation[] }) {
-  const [locations, setLocations] = useState(initialLocations);
+
+export type OfflineLocation = {
+    id: string;
+    name: string;
+    region: string;
+    officer: string;
+    deviceStatus: 'Online' | 'Offline' | 'Syncing';
+};
+
+export default function OfflineLocationList() {
+    const firestore = useFirestore();
+    const locationsRef = useMemoFirebase(() => collection(firestore, 'offlineLocations'), [firestore]);
+    const { data: locations, isLoading } = useCollection<OfflineLocation>(locationsRef);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Partial<OfflineLocation>>({});
@@ -23,19 +37,20 @@ export default function OfflineLocationList({ initialLocations }: { initialLocat
         return;
     }
 
-    if (isEditing) {
-      setLocations(locations.map(loc => loc.id === currentLocation.id ? { ...loc, ...currentLocation } as OfflineLocation : loc));
+    if (isEditing && currentLocation.id) {
+        const locationDocRef = doc(firestore, 'offlineLocations', currentLocation.id);
+        updateDocumentNonBlocking(locationDocRef, currentLocation);
     } else {
-      const newLocation: OfflineLocation = {
-        id: (Date.now()).toString(),
+      const newLocation: Omit<OfflineLocation, 'id'> = {
         name: currentLocation.name,
         region: currentLocation.region,
         officer: currentLocation.officer,
-        deviceStatus: currentLocation.deviceStatus,
+        deviceStatus: currentLocation.deviceStatus as OfflineLocation['deviceStatus'],
       };
-      setLocations([...locations, newLocation]);
+      addDocumentNonBlocking(locationsRef, newLocation);
     }
     setIsDialogOpen(false);
+    setCurrentLocation({});
   };
 
   const handleOpenDialog = (location?: OfflineLocation) => {
@@ -45,7 +60,8 @@ export default function OfflineLocationList({ initialLocations }: { initialLocat
   };
   
   const handleDelete = (id: string) => {
-    setLocations(locations.filter(loc => loc.id !== id));
+    const locationDocRef = doc(firestore, 'offlineLocations', id);
+    deleteDocumentNonBlocking(locationDocRef);
   };
   
   const getStatusVariant = (status: OfflineLocation['deviceStatus']) => {
@@ -56,6 +72,10 @@ export default function OfflineLocationList({ initialLocations }: { initialLocat
       default: return 'outline';
     }
   };
+
+  if (isLoading) {
+      return <div>Loading...</div>
+  }
 
   return (
     <>
@@ -78,7 +98,7 @@ export default function OfflineLocationList({ initialLocations }: { initialLocat
             </TableRow>
           </TableHeader>
           <TableBody>
-            {locations.map((location) => (
+            {locations?.map((location) => (
               <TableRow key={location.id}>
                 <TableCell className="font-medium">{location.name}</TableCell>
                 <TableCell>{location.region}</TableCell>

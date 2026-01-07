@@ -7,8 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
-import type { Voter } from '@/lib/data';
 import { sendVoterAddedEmail } from '@/lib/mail';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
+export interface Voter {
+  id: string;
+  name: string;
+  voterId: string;
+  email: string;
+  idImageUrl: string;
+}
 
 function VoterCard({ voter, onEdit, onDelete }: { voter: Voter, onEdit: () => void, onDelete: () => void }) {
   return (
@@ -42,32 +52,36 @@ function VoterCard({ voter, onEdit, onDelete }: { voter: Voter, onEdit: () => vo
   );
 }
 
-export default function VoterList({ initialVoters }: { initialVoters: Voter[] }) {
-  const [voters, setVoters] = useState(initialVoters);
+export default function VoterList() {
+  const firestore = useFirestore();
+  const votersRef = useMemoFirebase(() => collection(firestore, 'voters'), [firestore]);
+  const { data: voters, isLoading } = useCollection<Voter>(votersRef);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentVoter, setCurrentVoter] = useState<Partial<Voter>>({});
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentVoter.name || !currentVoter.voterId || !currentVoter.email) {
         alert("Name, Voter ID, and Email are required.");
         return;
     }
 
-    if (isEditing) {
-      setVoters(voters.map(v => v.id === currentVoter.id ? { ...v, ...currentVoter } as Voter : v));
+    if (isEditing && currentVoter.id) {
+        const voterDocRef = doc(firestore, 'voters', currentVoter.id);
+        updateDocumentNonBlocking(voterDocRef, currentVoter);
     } else {
-      const newVoter: Voter = {
-        id: (Date.now()).toString(),
+      const newVoter: Omit<Voter, 'id'> = {
         name: currentVoter.name,
         voterId: currentVoter.voterId,
         email: currentVoter.email,
         idImageUrl: currentVoter.idImageUrl || 'https://picsum.photos/seed/id-' + Date.now() + '/400/400',
       };
-      setVoters([...voters, newVoter]);
-      sendVoterAddedEmail(newVoter);
+      const newDocRef = await addDocumentNonBlocking(votersRef, newVoter);
+      sendVoterAddedEmail({ ...newVoter, id: newDocRef.id });
     }
     setIsDialogOpen(false);
+    setCurrentVoter({});
   };
   
   const handleOpenDialog = (voter?: Voter) => {
@@ -77,8 +91,13 @@ export default function VoterList({ initialVoters }: { initialVoters: Voter[] })
   };
 
   const handleDelete = (id: string) => {
-    setVoters(voters.filter(v => v.id !== id));
+    const voterDocRef = doc(firestore, 'voters', id);
+    deleteDocumentNonBlocking(voterDocRef);
   };
+  
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -90,7 +109,7 @@ export default function VoterList({ initialVoters }: { initialVoters: Voter[] })
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {voters.map((voter) => (
+        {voters?.map((voter) => (
           <VoterCard 
             key={voter.id} 
             voter={voter} 

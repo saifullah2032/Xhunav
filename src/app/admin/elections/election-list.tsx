@@ -9,26 +9,78 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
-import type { Election, Candidate, Voter } from '@/lib/data';
-import { candidates, voters } from '@/lib/data';
 import { sendElectionWinnerEmail, sendElectionResultsEmail } from '@/lib/mail';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import type { Candidate } from '../candidates/candidate-list';
+import type { Voter } from '../voters/voter-list';
 
-export default function ElectionList({ initialElections }: { initialElections: Election[] }) {
-  const [elections, setElections] = useState(initialElections);
+export type Election = {
+  id: string;
+  name: string;
+  region: string;
+  startDate: string;
+  endDate: string;
+  status: 'Upcoming' | 'Active' | 'Ended';
+  voterCount: number;
+  candidateCount: number;
+};
+
+export default function ElectionList() {
+  const firestore = useFirestore();
+  const electionsRef = useMemoFirebase(() => collection(firestore, 'elections'), [firestore]);
+  const { data: elections, isLoading: electionsLoading } = useCollection<Election>(electionsRef);
+  
+  const candidatesRef = useMemoFirebase(() => collection(firestore, 'candidates'), [firestore]);
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(candidatesRef);
+
+  const votersRef = useMemoFirebase(() => collection(firestore, 'voters'), [firestore]);
+  const { data: voters, isLoading: votersLoading } = useCollection<Voter>(votersRef);
+  
+  const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
+  const { data: votes, isLoading: votesLoading } = useCollection<{candidateId: string}>(votesRef);
+
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentElection, setCurrentElection] = useState<Partial<Election>>({});
+  
+  const getVoteCounts = () => {
+    if (!votes || !candidates) return {};
+    const counts: {[key: string]: number} = {};
+    candidates.forEach(c => counts[c.id] = 0);
+    votes.forEach(v => {
+      if (counts[v.candidateId] !== undefined) {
+        counts[v.candidateId]++;
+      }
+    });
+    return counts;
+  }
 
   const handleElectionEnd = (election: Election) => {
-    // This is a simulation. In a real app, you'd fetch live results.
-    const winner = candidates.reduce((prev, current) => (prev.votes > current.votes) ? prev : current);
-    
-    // Send email to winner
-    sendElectionWinnerEmail(winner);
+    if(!candidates || !votes || !voters) return;
 
-    // Send email to all candidates and voters
-    const allCandidatesAndVoters: (Candidate | Voter)[] = [...candidates, ...voters];
-    sendElectionResultsEmail(allCandidatesAndVoters, winner, election);
+    const voteCounts = getVoteCounts();
+    
+    let winner: Candidate | null = null;
+    let maxVotes = -1;
+
+    candidates.forEach(candidate => {
+        const count = voteCounts[candidate.id] || 0;
+        if(count > maxVotes) {
+            maxVotes = count;
+            winner = candidate;
+        }
+    });
+    
+    if (winner) {
+        sendElectionWinnerEmail(winner);
+
+        const allRecipients = [...candidates, ...voters];
+        sendElectionResultsEmail(allRecipients, winner, election, maxVotes);
+    }
+    
   };
 
   const handleSave = () => {
@@ -36,35 +88,31 @@ export default function ElectionList({ initialElections }: { initialElections: E
         alert("All fields are required.");
         return;
     }
+    
+    const originalElection = isEditing ? elections?.find(e => e.id === currentElection.id) : undefined;
 
-    if (isEditing) {
-      const updatedElections = elections.map(e => e.id === currentElection.id ? { ...e, ...currentElection } as Election : e);
-      setElections(updatedElections);
-      
-      const updatedElection = updatedElections.find(e => e.id === currentElection.id);
-      if (updatedElection && updatedElection.status === 'Ended') {
-        const originalElection = elections.find(e => e.id === currentElection.id);
-        if (originalElection && originalElection.status !== 'Ended') {
-            handleElectionEnd(updatedElection);
-        }
-      }
+    if (isEditing && currentElection.id) {
+        const electionDocRef = doc(firestore, 'elections', currentElection.id);
+        updateDocumentNonBlocking(electionDocRef, currentElection);
     } else {
-      const newElection: Election = {
-        id: (Date.now()).toString(),
+      const newElection: Omit<Election, 'id'> = {
         name: currentElection.name,
         startDate: currentElection.startDate,
         endDate: currentElection.endDate,
-        status: currentElection.status,
+        status: currentElection.status as Election['status'],
         region: currentElection.region,
-        voterCount: currentElection.voterCount || voters.length,
-        candidateCount: currentElection.candidateCount || candidates.length
+        voterCount: currentElection.voterCount || 0,
+        candidateCount: currentElection.candidateCount || 0,
       };
-      setElections([...elections, newElection]);
-       if (newElection.status === 'Ended') {
-        handleElectionEnd(newElection);
-      }
+      addDocumentNonBlocking(electionsRef, newElection);
     }
+
+    if (currentElection.status === 'Ended' && originalElection?.status !== 'Ended') {
+        handleElectionEnd(currentElection as Election);
+    }
+
     setIsDialogOpen(false);
+    setCurrentElection({});
   };
 
   const handleOpenDialog = (election?: Election) => {
@@ -74,7 +122,8 @@ export default function ElectionList({ initialElections }: { initialElections: E
   };
   
   const handleDelete = (id: string) => {
-    setElections(elections.filter(e => e.id !== id));
+    const electionDocRef = doc(firestore, 'elections', id);
+    deleteDocumentNonBlocking(electionDocRef);
   };
   
   const getStatusVariant = (status: Election['status']) => {
@@ -85,6 +134,12 @@ export default function ElectionList({ initialElections }: { initialElections: E
       default: return 'outline';
     }
   };
+  
+  const isLoading = electionsLoading || candidatesLoading || votersLoading || votesLoading;
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
   return (
     <>
@@ -110,7 +165,7 @@ export default function ElectionList({ initialElections }: { initialElections: E
             </TableRow>
           </TableHeader>
           <TableBody>
-            {elections.map((election) => (
+            {elections?.map((election) => (
               <TableRow key={election.id}>
                 <TableCell className="font-medium">{election.name}</TableCell>
                 <TableCell>{election.region}</TableCell>

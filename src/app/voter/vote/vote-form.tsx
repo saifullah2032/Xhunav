@@ -1,13 +1,16 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { candidates } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ShieldCheck, Vote, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast"
-import type { Candidate } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, addDoc } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import type { Candidate } from '@/app/admin/candidates/candidate-list';
+
 
 // Faking a cryptographic library
 const fakeCrypto = {
@@ -28,6 +31,12 @@ const fakeCrypto = {
 
 export default function VoteForm() {
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const candidatesRef = useMemoFirebase(() => collection(firestore, 'candidates'), [firestore]);
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(candidatesRef);
+  const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
+
+
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
@@ -50,15 +59,12 @@ export default function VoteForm() {
         const signature = await fakeCrypto.dilithiumSign(voteHash);
 
         const voteTransaction = {
-            voterId: voteData.voterId,
-            electionId: voteData.electionId,
+            ...voteData,
             voteHash: voteHash,
             signature: signature,
-            timestamp: voteData.timestamp,
         };
 
-        // In a real app, you would send `voteTransaction` to Firestore
-        console.log("Vote Transaction Payload:", voteTransaction);
+        addDocumentNonBlocking(votesRef, voteTransaction);
 
         setHasVoted(true);
         toast({
@@ -84,6 +90,10 @@ export default function VoteForm() {
     }
   };
 
+  if (candidatesLoading) {
+      return <div>Loading candidates...</div>
+  }
+
   if (hasVoted) {
     return (
         <Card className="text-center p-8 max-w-lg mx-auto">
@@ -96,7 +106,7 @@ export default function VoteForm() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {candidates.map((candidate) => (
+      {candidates?.map((candidate) => (
         <Card key={candidate.id} className="group relative flex flex-col overflow-hidden text-center transition-all duration-300 hover:shadow-xl">
           <div className="relative h-48 w-full">
             <div className="absolute inset-0 bg-primary [clip-path:polygon(0_0,_100%_0,_100%_80%,_0_100%)]">

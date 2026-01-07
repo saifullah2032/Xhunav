@@ -7,10 +7,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash2, Star } from 'lucide-react';
-import type { Candidate } from '@/lib/data';
 import { sendCandidateAddedEmail } from '@/lib/mail';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-function CandidateCard({ candidate, onEdit, onDelete }: { candidate: Candidate, onEdit: () => void, onDelete: () => void }) {
+
+// This should be defined in a types file
+export interface Candidate {
+  id: string;
+  name: string;
+  party: string;
+  manifesto: string;
+  imageUrl: string;
+  email: string;
+  idImageUrl: string;
+}
+
+export interface Vote {
+    id: string;
+    candidateId: string;
+}
+
+
+function CandidateCard({ candidate, onEdit, onDelete, voteCount }: { candidate: Candidate, onEdit: () => void, onDelete: () => void, voteCount: number }) {
   return (
     <Card className="group relative flex flex-col overflow-hidden text-center transition-all duration-300 hover:shadow-xl">
       <div className="relative h-48 w-full">
@@ -26,7 +46,7 @@ function CandidateCard({ candidate, onEdit, onDelete }: { candidate: Candidate, 
       <div className="flex flex-1 flex-col items-center p-6">
         <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-accent/90 px-2 py-1 text-xs font-bold text-accent-foreground">
           <Star className="h-3 w-3" />
-          <span>{ (candidate.votes / 1000).toFixed(1) }k</span>
+          <span>{ (voteCount / 1000).toFixed(1) }k</span>
         </div>
         <CardContent className="p-0 flex-grow">
           <h3 className="text-lg font-bold">{candidate.name}</h3>
@@ -46,36 +66,46 @@ function CandidateCard({ candidate, onEdit, onDelete }: { candidate: Candidate, 
 }
 
 
-export default function CandidateList({ initialCandidates }: { initialCandidates: Candidate[] }) {
-  const [candidates, setCandidates] = useState(initialCandidates);
+export default function CandidateList() {
+  const firestore = useFirestore();
+  const candidatesRef = useMemoFirebase(() => collection(firestore, 'candidates'), [firestore]);
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(candidatesRef);
+  
+  const votesRef = useMemoFirebase(() => collection(firestore, 'votes'), [firestore]);
+  const { data: votes, isLoading: votesLoading } = useCollection<Vote>(votesRef);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentCandidate, setCurrentCandidate] = useState<Partial<Candidate>>({});
-  const [candidateToDelete, setCandidateToDelete] = useState<Candidate | null>(null);
+  
+  const getVoteCount = (candidateId: string) => {
+    if (!votes) return 0;
+    return votes.filter(vote => vote.candidateId === candidateId).length;
+  };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentCandidate.name || !currentCandidate.party || !currentCandidate.email) {
         alert("Name, Party, and Email are required.");
         return;
     }
 
-    if (isEditing) {
-      setCandidates(candidates.map(c => c.id === currentCandidate.id ? { ...c, ...currentCandidate } as Candidate : c));
+    if (isEditing && currentCandidate.id) {
+        const candidateDocRef = doc(firestore, 'candidates', currentCandidate.id);
+        updateDocumentNonBlocking(candidateDocRef, currentCandidate);
     } else {
-      const newCandidate: Candidate = {
-        id: (Date.now()).toString(),
-        name: currentCandidate.name,
-        party: currentCandidate.party,
-        email: currentCandidate.email,
-        manifesto: currentCandidate.manifesto || 'New candidate manifesto.',
-        idImageUrl: currentCandidate.idImageUrl || 'https://picsum.photos/seed/id-' + Date.now() + '/400/400',
-        imageUrl: currentCandidate.imageUrl || 'https://picsum.photos/seed/' + Date.now() + '/400/400',
-        votes: 0,
-      };
-      setCandidates([...candidates, newCandidate]);
-      sendCandidateAddedEmail(newCandidate);
+        const newCandidate: Omit<Candidate, 'id'> = {
+            name: currentCandidate.name,
+            party: currentCandidate.party,
+            email: currentCandidate.email,
+            manifesto: currentCandidate.manifesto || 'New candidate manifesto.',
+            idImageUrl: currentCandidate.idImageUrl || 'https://picsum.photos/seed/id-' + Date.now() + '/400/400',
+            imageUrl: currentCandidate.imageUrl || 'https://picsum.photos/seed/' + Date.now() + '/400/400',
+        };
+        const newDocRef = await addDocumentNonBlocking(candidatesRef, newCandidate);
+        sendCandidateAddedEmail({ ...newCandidate, id: newDocRef.id });
     }
     setIsDialogOpen(false);
+    setCurrentCandidate({});
   };
   
   const handleOpenDialog = (candidate?: Candidate) => {
@@ -85,9 +115,13 @@ export default function CandidateList({ initialCandidates }: { initialCandidates
   };
 
   const handleDelete = (id: string) => {
-    setCandidates(candidates.filter(c => c.id !== id));
+    const candidateDocRef = doc(firestore, 'candidates', id);
+    deleteDocumentNonBlocking(candidateDocRef);
   };
   
+  if (candidatesLoading || votesLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -99,12 +133,13 @@ export default function CandidateList({ initialCandidates }: { initialCandidates
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {candidates.map((candidate) => (
+          {candidates?.map((candidate) => (
               <CandidateCard 
                   key={candidate.id} 
                   candidate={candidate} 
                   onEdit={() => handleOpenDialog(candidate)} 
-                  onDelete={() => handleDelete(candidate.id)} 
+                  onDelete={() => handleDelete(candidate.id)}
+                  voteCount={getVoteCount(candidate.id)}
               />
           ))}
       </div>
