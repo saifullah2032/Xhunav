@@ -1,0 +1,270 @@
+{
+  "entities": {
+    "Admin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Admin",
+      "type": "object",
+      "description": "Represents an administrator of the Xhunav E-Vote system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Admin entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "Admin's username for login."
+        },
+        "email": {
+          "type": "string",
+          "description": "Admin's email address.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email"
+      ]
+    },
+    "Voter": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Voter",
+      "type": "object",
+      "description": "Represents a registered voter in the Xhunav E-Vote system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Voter entity."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "Voter's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Voter's last name."
+        },
+        "email": {
+          "type": "string",
+          "description": "Voter's email address.",
+          "format": "email"
+        },
+        "hasVoted": {
+          "type": "boolean",
+          "description": "Indicates whether the voter has already voted in the current election."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "hasVoted"
+      ]
+    },
+    "Candidate": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Candidate",
+      "type": "object",
+      "description": "Represents a candidate in an election.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Candidate entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Candidate's full name."
+        },
+        "party": {
+          "type": "string",
+          "description": "Candidate's political party."
+        },
+        "electionIds": {
+          "type": "array",
+          "description": "References to Elections. (Relationship: Election N:N Candidate)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "party",
+        "electionIds"
+      ]
+    },
+    "Election": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Election",
+      "type": "object",
+      "description": "Represents an election event.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Election entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the election."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Date and time when the election starts.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Date and time when the election ends.",
+          "format": "date-time"
+        },
+        "candidateIds": {
+          "type": "array",
+          "description": "References to Candidates. (Relationship: Election N:N Candidate)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "startDate",
+        "endDate",
+        "candidateIds"
+      ]
+    },
+    "Vote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Vote",
+      "type": "object",
+      "description": "Represents a single vote cast in an election.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Vote entity."
+        },
+        "voterId": {
+          "type": "string",
+          "description": "Reference to Voter. (Relationship: Voter 1:N Vote)"
+        },
+        "electionId": {
+          "type": "string",
+          "description": "Reference to Election. (Relationship: Election 1:N Vote)"
+        },
+        "candidateId": {
+          "type": "string",
+          "description": "Reference to Candidate. (Relationship: Candidate 1:N Vote)"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The time the vote was cast.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "voterId",
+        "electionId",
+        "candidateId",
+        "timestamp"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "Admin",
+          "schema": {
+            "$ref": "#/backend/entities/Admin"
+          },
+          "description": "Documents in this collection indicate admin privileges. Existence of a document grants admin access.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The Firebase Auth UID of the administrator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/voters/{voterId}",
+        "definition": {
+          "entityName": "Voter",
+          "schema": {
+            "$ref": "#/backend/entities/Voter"
+          },
+          "description": "Stores voter information.",
+          "params": [
+            {
+              "name": "voterId",
+              "description": "The unique identifier of the voter (likely the Firebase Auth UID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/candidates/{candidateId}",
+        "definition": {
+          "entityName": "Candidate",
+          "schema": {
+            "$ref": "#/backend/entities/Candidate"
+          },
+          "description": "Stores candidate information.",
+          "params": [
+            {
+              "name": "candidateId",
+              "description": "The unique identifier of the candidate."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/elections/{electionId}",
+        "definition": {
+          "entityName": "Election",
+          "schema": {
+            "$ref": "#/backend/entities/Election"
+          },
+          "description": "Stores election information.",
+          "params": [
+            {
+              "name": "electionId",
+              "description": "The unique identifier of the election."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/elections/{electionId}/votes/{voteId}",
+        "definition": {
+          "entityName": "Vote",
+          "schema": {
+            "$ref": "#/backend/entities/Vote"
+          },
+          "description": "Stores individual vote information. Includes denormalized 'voterId' to avoid 'get()' calls in security rules.",
+          "params": [
+            {
+              "name": "electionId",
+              "description": "The unique identifier of the election."
+            },
+            {
+              "name": "voteId",
+              "description": "The unique identifier of the vote."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore data structure is designed for the Xhunav E-Vote application, focusing on security, scalability, and ease of management.  The core principle is Authorization Independence, achieved through denormalization, which avoids complex `get()` calls in security rules and enables atomic operations.  Structural Segregation is employed to ensure collections contain data with homogeneous security needs, simplifying rules and improving predictability.\n\n**Authorization Independence:**\n*   `votes` subcollection under `elections` includes denormalized `voterId` to eliminate the need to `get()` voter data during vote creation. This allows direct validation that the user is authorized to vote in the election.\n\n**QAPs (Rules are not Filters):**\n*   Segregation is used to ensure that listing operations are secure. For example, voters can only access elections currently in progress, and admins can access all elections. Separate collections are not needed since all documents in a collection share the same security requirements.\n\n**Access Control:**\n*   Admin roles are managed in the `/roles_admin/{uid}` collection, checked for admin-level operations.\n*   Voter data and votes are secured by user ID and election ID.\n\nThe structure facilitates secure `list` operations by ensuring data homogeneity within collections.  The denormalized `voterId` in the `votes` subcollection enhances write security by enabling authorization checks directly within the document's data, without relying on external `get()` calls. This enhances write security and supports atomic operations."
+  }
+}

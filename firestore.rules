@@ -1,0 +1,143 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict Role-Based Access Control (RBAC) model combined with user ownership.
+ * There are two primary roles: Admins and Voters (standard authenticated users). Admins have broad management
+ * capabilities over elections and candidates, while Voters have control only over their own specific data and actions, like voting.
+ *
+ * Data Structure:
+ * - /roles_admin/{adminId}: A lookup collection to identify users with administrative privileges.
+ * - /voters/{voterId}: Contains private profile information for each voter, secured by user ID.
+ * - /candidates/{candidateId}: A public-read collection of election candidates, managed by admins.
+ * - /elections/{electionId}: A public-read collection of election events, managed by admins.
+ * - /elections/{electionId}/votes/{voteId}: A write-once, private subcollection where votes are cast. Votes are immutable
+ *   and cannot be read by other voters to ensure privacy and integrity.
+ *
+ * Key Security Decisions:
+ * - Admin Access: A user is considered an admin if a document with their UID exists in the `/roles_admin` collection.
+ *   This provides a centralized and clear way to manage permissions.
+ * - Strict Ownership: A user can only access the data tree under `/voters/{userId}` that matches their own UID.
+ *   Listing the entire `/voters` collection is explicitly disallowed to protect user privacy.
+ * - Public Data Segregation: Election and candidate information, which is safe for public viewing, is stored in top-level
+ *   collections. Writes to this data are restricted to admins.
+ * - Vote Immutability: To protect the integrity of the election, votes are immutable. Once a vote is created, it cannot
+ *   be updated or deleted by anyone, including the voter or an admin. Reading votes is also restricted to admins to
+ *   maintain voter anonymity from the public.
+ *
+ * Denormalization for Authorization:
+ * The `/elections/{electionId}/votes/{voteId}` documents contain a `voterId` field. This denormalization is critical for security
+ * and performance. It allows the `create` rule to validate that the person casting the vote is the authenticated user
+ * (`request.resource.data.voterId == request.auth.uid`) without performing any extra `get()` calls, which are not only
+ * slow and costly but can also lead to race conditions.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    //-------------------------------------------------------------------------
+    // Helper Functions
+    //-------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId.
+     * This is the foundation for the ownership model.
+     * @param userId The user ID to check against the request's auth UID.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the user is an administrator.
+     * Admin status is granted by the existence of a document in the /roles_admin collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * Checks if a document exists. Used to secure update/delete operations.
+     */
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+    //-------------------------------------------------------------------------
+    // Collection Rules
+    //-------------------------------------------------------------------------
+
+    /**
+     * @description Manages admin role assignments. Only existing admins can read or modify this collection.
+     * @path /roles_admin/{adminId}
+     * @allow (get) An admin reads another admin's role document.
+     * @deny (get) A regular user tries to read an admin document.
+     * @principle Restricts high-privilege role management to authorized administrators.
+     */
+    match /roles_admin/{adminId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Secures individual voter profile data. Voters can only manage their own document.
+     * @path /voters/{voterId}
+     * @allow (create) A new user signs up and creates their own voter profile document. auth.uid must match voterId.
+     * @deny (list) Any user, including an admin, tries to list all documents in the `/voters` collection.
+     * @deny (get) User 'A' tries to read the voter profile for user 'B'.
+     * @principle Enforces strict data ownership and prevents exposure of user lists.
+     */
+    match /voters/{voterId} {
+      allow get: if isOwner(voterId);
+      allow list: if false;
+      allow create: if isOwner(voterId) && request.resource.data.id == voterId;
+      allow update: if isOwner(voterId) && isExistingDoc() && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(voterId) && isExistingDoc();
+    }
+
+    /**
+     * @description Defines rules for the candidates collection, which is publicly readable but only manageable by admins.
+     * @path /candidates/{candidateId}
+     * @allow (list) Any authenticated user lists all available candidates.
+     * @deny (create) A regular user attempts to add a new candidate.
+     * @principle Provides public read access for general information while securing writes to trusted admins.
+     */
+    match /candidates/{candidateId} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Defines rules for the elections collection, which is publicly readable but only manageable by admins.
+     * @path /elections/{electionId}
+     * @allow (get) Any authenticated user views the details of a specific election.
+     * @deny (update) A regular user attempts to change the end date of an election.
+     * @principle Provides public read access for general information while securing writes to trusted admins.
+     */
+    match /elections/{electionId} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && isExistingDoc();
+
+      /**
+       * @description Secures the votes subcollection. Voters can only create their own vote. Votes are immutable and private.
+       * @path /elections/{electionId}/votes/{voteId}
+       * @allow (create) An authenticated user casts a vote, where the `voterId` in the document matches their auth UID.
+       * @deny (update) Any user attempts to change a vote after it has been cast.
+       * @deny (get) A regular user tries to read another user's vote document.
+       * @principle Enforces vote integrity through immutability and write-once logic, and protects voter privacy.
+       */
+      match /votes/{voteId} {
+        allow get, list: if isAdmin();
+        allow create: if isSignedIn() && request.resource.data.voterId == request.auth.uid;
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+  }
+}
