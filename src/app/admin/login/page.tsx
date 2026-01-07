@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -9,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function AdminLoginPage() {
     }
 
     try {
+        // First, try to sign in
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         if (userCredential.user) {
             toast({
@@ -41,16 +43,38 @@ export default function AdminLoginPage() {
             router.push('/admin/dashboard');
         }
     } catch (error: any) {
-        let description = 'An unexpected error occurred.';
-        if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-            description = 'Invalid credentials. Please check your email and password.';
+        // If sign-in fails because the user doesn't exist, try to create the user
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+            try {
+                const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
+                if (newUserCredential.user) {
+                    toast({
+                        title: 'Admin Account Created',
+                        description: 'Redirecting to dashboard...',
+                    });
+                    router.push('/admin/dashboard');
+                }
+            } catch (creationError: any) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Account Creation Failed',
+                    description: creationError.message || 'Could not create the admin account.',
+                });
+                setIsLoading(false);
+            }
+        } else {
+            // Handle other errors like wrong password
+            let description = 'An unexpected error occurred.';
+            if (error.code === 'auth/wrong-password') {
+                description = 'Invalid credentials. Please check your password.';
+            }
+            toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: description,
+            });
+            setIsLoading(false);
         }
-        toast({
-            variant: 'destructive',
-            title: 'Login Failed',
-            description: description,
-        });
-        setIsLoading(false);
     }
   };
 
