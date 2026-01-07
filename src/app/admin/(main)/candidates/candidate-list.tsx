@@ -78,10 +78,10 @@ export default function CandidateList() {
   }, [firestore]);
 
   const candidatesRef = useMemoFirebase(() => firestore ? collection(firestore, 'candidates') : null, [firestore]);
-  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(candidatesRef);
+  const { data: candidates, isLoading: candidatesLoading, error: candidatesError } = useCollection<Candidate>(candidatesRef);
   
   const votesRef = useMemoFirebase(() => firestore ? collection(firestore, 'votes') : null, [firestore]);
-  const { data: votes, isLoading: votesLoading } = useCollection<Vote>(votesRef);
+  const { data: votes, isLoading: votesLoading, error: votesError } = useCollection<Vote>(votesRef);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);

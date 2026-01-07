@@ -6,11 +6,12 @@ import RealTimeVoteTally from './real-time-vote-tally';
 import TransparencyIndexChart from './transparency-index-chart';
 import VotesPerCandidateChart from './votes-per-candidate-chart';
 import VoterTurnoutChart from './voter-turnout-chart';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Voter } from '../voters/voter-list';
 import { useEffect } from 'react';
 import { seedDatabase } from '@/lib/seed';
+import { useRouter } from 'next/navigation';
 
 
 function StatCard({ title, value, icon: Icon, subtext }: { title: string, value: string, icon: React.ElementType, subtext: string }) {
@@ -30,6 +31,14 @@ function StatCard({ title, value, icon: Icon, subtext }: { title: string, value:
 
 export default function AdminDashboard() {
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/admin/login');
+    }
+  }, [user, isUserLoading, router]);
 
   useEffect(() => {
     if (firestore) {
@@ -40,7 +49,7 @@ export default function AdminDashboard() {
   const votersRef = useMemoFirebase(() => firestore ? collection(firestore, 'voters') : null, [firestore]);
   const { data: voters, isLoading } = useCollection<Voter>(votersRef);
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return <div>Loading Dashboard...</div>
   }
 
