@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -9,14 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
-import { useAuth, initiateEmailSignIn } from '@/firebase';
+import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const auth = useAuth();
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('rayankhan2032@gmail.com');
+  const [password, setPassword] = useState('1234saif@');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -32,30 +32,23 @@ export default function AdminLoginPage() {
     }
 
     try {
-        await initiateEmailSignIn(auth, email, password);
-        // onAuthStateChanged will handle the redirect
-        // Forcing a wait to see if user is logged in
-        setTimeout(() => {
-            if (auth.currentUser) {
-                toast({
-                    title: 'Login Successful',
-                    description: 'Redirecting to dashboard...',
-                });
-                router.push('/admin/dashboard');
-            } else {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Login Failed',
-                    description: 'Please check your credentials and try again.',
-                });
-                 setIsLoading(false);
-            }
-        }, 2000);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (userCredential.user) {
+            toast({
+                title: 'Login Successful',
+                description: 'Redirecting to dashboard...',
+            });
+            router.push('/admin/dashboard');
+        }
     } catch (error: any) {
+        let description = 'An unexpected error occurred.';
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+            description = 'Invalid credentials. Please check your email and password.';
+        }
         toast({
             variant: 'destructive',
             title: 'Login Failed',
-            description: error.message || 'An unexpected error occurred.',
+            description: description,
         });
         setIsLoading(false);
     }
