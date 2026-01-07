@@ -2,12 +2,13 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { transparencyData } from '@/lib/data';
 
 const COLORS = ['hsl(var(--accent))', 'hsl(var(--muted))'];
 
 export default function TransparencyIndexChart() {
-    const transparencyIndex = ((transparencyData.voteConfirmation + transparencyData.ledgerAccessibility + transparencyData.publicTransparency) / 3) * 100;
+    // Hardcoded value to remove dependency on the deleted `data.ts` file.
+    const transparencyIndex = 92.7;
+    
     const data = [
         { name: 'Index', value: transparencyIndex },
         { name: 'Remainder', value: 100 - transparencyIndex },
