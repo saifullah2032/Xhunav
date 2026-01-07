@@ -18,7 +18,7 @@ export default function TransparencyIndexChart() {
   return (
     <Card className="rounded-2xl shadow-sm h-full">
       <CardHeader>
-        <CardTitle>Transparency Index ($T_i$)</CardTitle>
+        <CardTitle>Transparency Index</CardTitle>
         <CardDescription>{status}</CardDescription>
       </CardHeader>
       <CardContent className="h-[300px] relative">
