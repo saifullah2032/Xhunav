@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Vote, ShieldCheck, GitBranch, ListChecks } from 'lucide-react';
-import { useAuth, initiateAnonymousSignIn } from '@/firebase';
-import { useRouter } from 'next/navigation';
 
 function Header() {
   return (
@@ -32,16 +30,6 @@ function Footer() {
 }
 
 export default function Home() {
-  const auth = useAuth();
-  const router = useRouter();
-
-  const handleAdminLogin = () => {
-    if (auth) {
-      initiateAnonymousSignIn(auth);
-      router.push('/admin/dashboard');
-    }
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -66,8 +54,8 @@ export default function Home() {
                   Voter Login
                 </Link>
               </Button>
-              <Button onClick={handleAdminLogin} className="w-full" variant="secondary" size="lg">
-                  Admin Login
+              <Button asChild className="w-full" variant="secondary" size="lg">
+                <Link href="/admin/login">Admin Login</Link>
               </Button>
             </CardContent>
           </Card>
